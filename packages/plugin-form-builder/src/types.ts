@@ -37,7 +37,7 @@ export interface FieldsConfig {
   textarea?: FieldConfig | boolean
 }
 
-export type BeforeEmail = (emails: FormattedEmail[], submissionData: {field: string, value: string}[]) => FormattedEmail[] | Promise<FormattedEmail[]>
+export type BeforeEmail = (emails: FormattedEmail[], formSubmission: FormSubmission) => FormattedEmail[] | Promise<FormattedEmail[]>
 export type HandlePayment = (data: any) => void
 
 export interface PluginConfig {
