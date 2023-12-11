@@ -63,7 +63,11 @@ export type LivePreviewConfig = {
    Use the `useLivePreview` hook to get started in React applications.
    */
   url?:
-    | ((args: { data: Record<string, any>; documentInfo: ContextType; locale: Locale }) => string)
+    | ((args: {
+        data: Record<string, any>
+        documentInfo: ContextType
+        locale: Locale
+      }) => Promise<string> | string)
     | string
 }
 
@@ -288,7 +292,7 @@ export type Locale = {
    * label of supported locale
    * @example "English"
    */
-  label: string
+  label: Record<string, string> | string
   /**
    * if true, defaults textAligmnent on text fields to RTL
    */
@@ -663,7 +667,7 @@ export type Config = {
     api?: string
     /** @default "/graphql"  */
     graphQL?: string
-    /** @default "/playground" */
+    /** @default "/graphql-playground" */
     graphQLPlayground?: string
   }
   /**

@@ -13,6 +13,23 @@ const RelationshipFields: CollectionConfig = {
       relationTo: ['text-fields', 'array-fields'],
       required: true,
       type: 'relationship',
+      admin: {
+        sortOptions: {
+          'text-fields': '-id',
+          'array-fields': '-id',
+        },
+      },
+    },
+    {
+      name: 'relationHasManyPolymorphic',
+      type: 'relationship',
+      relationTo: ['text-fields', 'array-fields'],
+      hasMany: true,
+      admin: {
+        sortOptions: {
+          'text-fields': '-text',
+        },
+      },
     },
     {
       name: 'relationToSelf',
@@ -75,6 +92,13 @@ const RelationshipFields: CollectionConfig = {
         },
       ],
       type: 'array',
+    },
+    {
+      name: 'relationshipWithMinRows',
+      relationTo: ['text-fields'],
+      hasMany: true,
+      minRows: 2,
+      type: 'relationship',
     },
   ],
   slug: relationshipFieldsSlug,

@@ -17,6 +17,7 @@ import { FileUploadError, MissingFile } from '../errors'
 import canResizeImage from './canResizeImage'
 import cropImage from './cropImage'
 import getFileByPath from './getFileByPath'
+import getFileByURL from './getFileByURL'
 import getImageSize from './getImageSize'
 import getSafeFileName from './getSafeFilename'
 import resizeAndTransformImageSizes from './imageResizer'
@@ -63,12 +64,22 @@ export const generateFileData = async <T>({
   }
 
   if (!file && uploadEdits && data) {
-    const { filename } = data as FileData
-    const filePath = `${staticPath}/${filename}`
-    const response = await getFileByPath(filePath)
+    const { filename, url } = data as FileData
 
-    overwriteExistingFiles = true
-    file = response as UploadedFile
+    try {
+      if (url && url.startsWith('/')) {
+        const filePath = `${staticPath}/${filename}`
+        const response = await getFileByPath(filePath)
+        file = response as UploadedFile
+        overwriteExistingFiles = true
+      } else {
+        const response = await getFileByURL(url)
+        file = response as UploadedFile
+        overwriteExistingFiles = true
+      }
+    } catch (err) {
+      throw new FileUploadError(req.t)
+    }
   }
 
   if (!file) {
@@ -99,7 +110,7 @@ export const generateFileData = async <T>({
     let fileBuffer: { data: Buffer; info: OutputInfo }
     let ext
     let mime: string
-    const isSharpRequired =
+    const fileHasAdjustments =
       fileSupportsResize &&
       Boolean(resizeOptions || formatOptions || trimOptions || file.tempFilePath)
 
@@ -107,7 +118,7 @@ export const generateFileData = async <T>({
 
     if (fileIsAnimated) sharpOptions.animated = true
 
-    if (isSharpRequired) {
+    if (fileHasAdjustments) {
       if (file.tempFilePath) {
         sharpFile = sharp(file.tempFilePath, sharpOptions).rotate() // pass rotate() to auto-rotate based on EXIF data. https://github.com/payloadcms/payload/pull/3081
       } else {
@@ -174,7 +185,7 @@ export const generateFileData = async <T>({
     fileData.filename = fsSafeName
     let fileForResize = file
 
-    if (isSharpRequired && cropData) {
+    if (cropData) {
       const { data: croppedImage, info } = await cropImage({ cropData, dimensions, file })
 
       filesToSave.push({
@@ -190,7 +201,12 @@ export const generateFileData = async <T>({
       fileData.width = info.width
       fileData.height = info.height
       fileData.filesize = info.size
-      req.files.file = fileForResize
+
+      if (file.tempFilePath) {
+        await fs.promises.writeFile(file.tempFilePath, croppedImage) // write fileBuffer to the temp path
+      } else {
+        req.files.file = fileForResize
+      }
     } else {
       filesToSave.push({
         buffer: fileBuffer?.data || file.data,
