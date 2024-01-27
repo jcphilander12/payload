@@ -350,6 +350,10 @@ export type UpdateOneArgs = {
   data: Record<string, unknown>
   draft?: boolean
   locale?: string
+  options?: {
+    new?: boolean
+    upsert?: boolean
+  }
   req: PayloadRequest
 } & (
   | {
