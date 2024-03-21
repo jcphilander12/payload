@@ -333,6 +333,11 @@ const BlockFields: CollectionConfig = {
         },
       },
     },
+    {
+      ...getBlocksField(),
+      name: 'rowActionsReadOnly',
+      accessRowActions: () => false,
+    },
   ],
 }
 
