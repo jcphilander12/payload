@@ -101,19 +101,6 @@ export const _ArrayField: React.FC<ArrayFieldProps> = (props) => {
 
   const labels = getLabels(props)
 
-  const memoizedValidate = useCallback(
-    (value, options) => {
-      // alternative locales can be null
-      if (!editingDefaultLocale && value === null) {
-        return true
-      }
-      if (typeof validate === 'function') {
-        return validate(value, { ...options, maxRows, minRows, required })
-      }
-    },
-    [maxRows, minRows, required, validate, editingDefaultLocale],
-  )
-
   const { path: pathFromContext } = useFieldProps()
 
   const {
@@ -127,7 +114,7 @@ export const _ArrayField: React.FC<ArrayFieldProps> = (props) => {
   } = useField<number>({
     hasRows: true,
     path: pathFromContext || pathFromProps || name,
-    validate: memoizedValidate,
+    validate,
   })
 
   const addRow = useCallback(

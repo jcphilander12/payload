@@ -84,14 +84,6 @@ const RelationshipField: React.FC<RelationshipFieldProps> = (props) => {
   const menuIsOpen = useRef(false)
   const hasLoadedFirstPageRef = useRef(false)
 
-  const memoizedValidate = useCallback(
-    (value, validationOptions) => {
-      if (typeof validate === 'function') {
-        return validate(value, { ...validationOptions, required })
-      }
-    },
-    [validate, required],
-  )
   const { path: pathFromContext, readOnly: readOnlyFromContext } = useFieldProps()
   const readOnly = readOnlyFromProps || readOnlyFromContext
 
@@ -99,7 +91,7 @@ const RelationshipField: React.FC<RelationshipFieldProps> = (props) => {
     Value | Value[]
   >({
     path: pathFromContext || pathFromProps || name,
-    validate: memoizedValidate,
+    validate,
   })
 
   const valueRef = useRef(value)

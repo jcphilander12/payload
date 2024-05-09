@@ -1,9 +1,9 @@
 'use client'
-import type { ClientValidate, Description, Validate } from 'payload/types'
+import type { Description, Validate } from 'payload/types'
 
 import { FieldError } from '@payloadcms/ui/forms/FieldError'
 import { FieldLabel } from '@payloadcms/ui/forms/FieldLabel'
-import React, { useCallback } from 'react'
+import React from 'react'
 
 import type { FormFieldBase } from '../shared/index.js'
 
@@ -44,18 +44,9 @@ const PasswordField: React.FC<PasswordFieldProps> = (props) => {
     width,
   } = props
 
-  const memoizedValidate: ClientValidate = useCallback(
-    (value, options) => {
-      if (typeof validate === 'function') {
-        return validate(value, { ...options, required })
-      }
-    },
-    [validate, required],
-  )
-
   const { formProcessing, path, setValue, showError, value } = useField({
     path: pathFromProps || name,
-    validate: memoizedValidate,
+    validate,
   })
 
   return (
