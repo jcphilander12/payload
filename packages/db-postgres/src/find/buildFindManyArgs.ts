@@ -1,14 +1,16 @@
 import type { DBQueryConfig } from 'drizzle-orm'
-import type { Field } from 'payload/types'
+import type { Field, Select } from 'payload/types'
 
 import type { PostgresAdapter } from '../types.js'
 
+import { buildColumns } from './buildColumns.js'
 import { traverseFields } from './traverseFields.js'
 
 type BuildFindQueryArgs = {
   adapter: PostgresAdapter
   depth: number
   fields: Field[]
+  select?: Select
   tableName: string
 }
 
@@ -20,17 +22,24 @@ export const buildFindManyArgs = ({
   adapter,
   depth,
   fields,
+  select,
   tableName,
 }: BuildFindQueryArgs): Record<string, unknown> => {
   const result: Result = {
     with: {},
   }
 
+  if (select)
+    result.columns = {
+      id: true,
+    }
+
   const _locales: Result = {
-    columns: {
-      id: false,
-      _parentID: false,
-    },
+    columns: buildColumns({
+      exclude: ['id', '_parentID'],
+      include: ['_locale'],
+      withSelection: !!select,
+    }),
   }
 
   if (adapter.tables[`${tableName}_texts`]) {
@@ -75,8 +84,10 @@ export const buildFindManyArgs = ({
     depth,
     fields,
     path: '',
+    select,
     topLevelArgs: result,
     topLevelTableName: tableName,
+    withSelection: !!select,
   })
 
   return result

@@ -1,6 +1,13 @@
 import type { TypeWithID } from '../collections/config/types.js'
 import type { TypeWithID as GlobalsTypeWithID } from '../globals/config/types.js'
-import type { Document, Payload, PayloadRequestWithData, Where } from '../types/index.js'
+import type {
+  Document,
+  Payload,
+  PayloadRequestWithData,
+  Populate,
+  Select,
+  Where,
+} from '../types/index.js'
 import type { TypeWithVersion } from '../versions/types.js'
 
 export type { TypeWithVersion }
@@ -181,6 +188,7 @@ export type FindOneArgs = {
   collection: string
   locale?: string
   req: PayloadRequestWithData
+  select?: Select
   where?: Where
 }
 
@@ -194,6 +202,7 @@ export type FindArgs = {
   page?: number
   pagination?: boolean
   req: PayloadRequestWithData
+  select?: Select
   skip?: number
   sort?: string
   versions?: boolean
@@ -238,6 +247,7 @@ export type FindGlobalVersionsArgs = BaseVersionArgs & {
 export type FindGlobalArgs = {
   locale?: string
   req: PayloadRequestWithData
+  select?: Select
   slug: string
   where?: Where
 }

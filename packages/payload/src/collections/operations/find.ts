@@ -1,6 +1,6 @@
 import type { AccessResult } from '../../config/types.js'
 import type { PaginatedDocs } from '../../database/types.js'
-import type { PayloadRequestWithData, Where } from '../../types/index.js'
+import type { PayloadRequestWithData, Populate, Select, Where } from '../../types/index.js'
 import type { Collection, TypeWithID } from '../config/types.js'
 
 import executeAccess from '../../auth/executeAccess.js'
@@ -25,7 +25,9 @@ export type Arguments = {
   overrideAccess?: boolean
   page?: number
   pagination?: boolean
+  populate?: Populate
   req?: PayloadRequestWithData
+  select?: Select
   showHiddenFields?: boolean
   sort?: string
   where?: Where
@@ -67,8 +69,10 @@ export const findOperation = async <T extends TypeWithID & Record<string, unknow
       overrideAccess,
       page,
       pagination = true,
+      populate,
       req: { fallbackLocale, locale, payload },
       req,
+      select,
       showHiddenFields,
       sort,
       where,
@@ -148,6 +152,7 @@ export const findOperation = async <T extends TypeWithID & Record<string, unknow
         page: sanitizedPage,
         pagination,
         req,
+        select,
         sort,
         where: fullWhere,
       })
@@ -201,7 +206,9 @@ export const findOperation = async <T extends TypeWithID & Record<string, unknow
             global: null,
             locale,
             overrideAccess,
+            populateArg: populate,
             req,
+            select,
             showHiddenFields,
           }),
         ),

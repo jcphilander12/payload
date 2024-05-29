@@ -1,4 +1,4 @@
-import type { PayloadRequestWithData } from '../../../types/index.js'
+import type { PayloadRequestWithData, Populate, Select } from '../../../types/index.js'
 import type { RelationshipField, UploadField } from '../../config/types.js'
 
 import { createDataloaderCacheKey } from '../../../collections/dataloader.js'
@@ -12,10 +12,12 @@ type PopulateArgs = {
   draft: boolean
   fallbackLocale: null | string
   field: RelationshipField | UploadField
+  fieldPopulatePath: string
   index?: number
   key?: string
   locale: null | string
   overrideAccess: boolean
+  populateArg?: Populate
   req: PayloadRequestWithData
   showHiddenFields: boolean
 }
@@ -28,10 +30,12 @@ const populate = async ({
   draft,
   fallbackLocale,
   field,
+  fieldPopulatePath,
   index,
   key,
   locale,
   overrideAccess,
+  populateArg,
   req,
   showHiddenFields,
 }: PopulateArgs) => {
@@ -41,8 +45,31 @@ const populate = async ({
 
   if (relatedCollection) {
     let id = Array.isArray(field.relationTo) ? data.value : data
+    field.defaultPopulate
+    let fieldDepth = depth
+    let fieldPopulateValue:
+      | {
+          populate?: Populate
+          select?: Select
+        }
+      | undefined
+
+    if ((populateArg && typeof populateArg === 'object') || field.defaultPopulate) {
+      const populateValue = populateArg?.[fieldPopulatePath] ?? field.defaultPopulate
+
+      if (!populateValue) fieldDepth = 0
+      else if (typeof populateValue === 'object') {
+        const currentPopulateValue = Array.isArray(populateValue)
+          ? populateValue.find((each) => each.relationTo === relatedCollection.config.slug)?.value
+          : populateValue
+
+        if (!currentPopulateValue) fieldDepth = 0
+        else if (typeof currentPopulateValue === 'object') fieldPopulateValue = currentPopulateValue
+      }
+    }
+
     let relationshipValue
-    const shouldPopulate = depth && currentDepth <= depth
+    const shouldPopulate = fieldDepth && currentDepth <= depth
 
     if (
       typeof id !== 'string' &&
@@ -64,6 +91,8 @@ const populate = async ({
           fallbackLocale,
           locale,
           overrideAccess,
+          populate: fieldPopulateValue?.populate,
+          select: fieldPopulateValue?.select,
           showHiddenFields,
           transactionID: req.transactionID,
         }),
@@ -101,8 +130,10 @@ type PromiseArgs = {
   draft: boolean
   fallbackLocale: null | string
   field: RelationshipField | UploadField
+  fieldPopulatePath: string
   locale: null | string
   overrideAccess: boolean
+  populateArg?: Populate
   req: PayloadRequestWithData
   showHiddenFields: boolean
   siblingDoc: Record<string, any>
@@ -114,8 +145,10 @@ export const relationshipPopulationPromise = async ({
   draft,
   fallbackLocale,
   field,
+  fieldPopulatePath,
   locale,
   overrideAccess,
+  populateArg,
   req,
   showHiddenFields,
   siblingDoc,
@@ -142,10 +175,12 @@ export const relationshipPopulationPromise = async ({
                 draft,
                 fallbackLocale,
                 field,
+                fieldPopulatePath,
                 index,
                 key,
                 locale,
                 overrideAccess,
+                populateArg,
                 req,
                 showHiddenFields,
               })
@@ -166,9 +201,11 @@ export const relationshipPopulationPromise = async ({
               draft,
               fallbackLocale,
               field,
+              fieldPopulatePath,
               index,
               locale,
               overrideAccess,
+              populateArg,
               req,
               showHiddenFields,
             })
@@ -193,9 +230,11 @@ export const relationshipPopulationPromise = async ({
           draft,
           fallbackLocale,
           field,
+          fieldPopulatePath,
           key,
           locale,
           overrideAccess,
+          populateArg,
           req,
           showHiddenFields,
         })
@@ -213,8 +252,10 @@ export const relationshipPopulationPromise = async ({
       draft,
       fallbackLocale,
       field,
+      fieldPopulatePath,
       locale,
       overrideAccess,
+      populateArg,
       req,
       showHiddenFields,
     })

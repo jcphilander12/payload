@@ -1,6 +1,11 @@
 import type { SanitizedCollectionConfig } from '../../../collections/config/types.js'
 import type { SanitizedGlobalConfig } from '../../../globals/config/types.js'
-import type { PayloadRequestWithData, RequestContext } from '../../../types/index.js'
+import type {
+  PayloadRequestWithData,
+  Populate,
+  RequestContext,
+  Select,
+} from '../../../types/index.js'
 import type { Field, TabAsField } from '../../config/types.js'
 
 import { promise } from './promise.js'
@@ -13,6 +18,8 @@ type Args = {
   doc: Record<string, unknown>
   draft: boolean
   fallbackLocale: null | string
+  fieldPath?: string
+  fieldPopulatePath?: string
   /**
    * fieldPromises are used for things like field hooks. They should be awaited before awaiting populationPromises
    */
@@ -23,8 +30,10 @@ type Args = {
   global: SanitizedGlobalConfig | null
   locale: null | string
   overrideAccess: boolean
+  populateArg?: Populate
   populationPromises: Promise<void>[]
   req: PayloadRequestWithData
+  select?: Select
   showHiddenFields: boolean
   siblingDoc: Record<string, unknown>
   triggerAccessControl?: boolean
@@ -39,6 +48,8 @@ export const traverseFields = ({
   doc,
   draft,
   fallbackLocale,
+  fieldPath = '',
+  fieldPopulatePath = '',
   fieldPromises,
   fields,
   findMany,
@@ -46,8 +57,10 @@ export const traverseFields = ({
   global,
   locale,
   overrideAccess,
+  populateArg,
   populationPromises,
   req,
+  select,
   showHiddenFields,
   siblingDoc,
   triggerAccessControl = true,
@@ -64,14 +77,18 @@ export const traverseFields = ({
         draft,
         fallbackLocale,
         field,
+        fieldPath,
+        fieldPopulatePath,
         fieldPromises,
         findMany,
         flattenLocales,
         global,
         locale,
         overrideAccess,
+        populateArg,
         populationPromises,
         req,
+        select,
         showHiddenFields,
         siblingDoc,
         triggerAccessControl,
