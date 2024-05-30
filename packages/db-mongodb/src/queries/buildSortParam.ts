@@ -8,7 +8,7 @@ type Args = {
   config: SanitizedConfig
   fields: Field[]
   locale: string
-  sort: string
+  sort: string | undefined
   timestamps: boolean
 }
 
@@ -28,6 +28,7 @@ export const buildSortParam = ({
 }: Args): PaginateOptions['sort'] => {
   let sortProperty: string
   let sortDirection: SortDirection = 'desc'
+  const isSortMultipleField = sort.includes(',')
 
   if (!sort) {
     if (timestamps) {
@@ -35,6 +36,24 @@ export const buildSortParam = ({
     } else {
       sortProperty = '_id'
     }
+  } else if (isSortMultipleField) {
+    const sortFields = sort.split(',')
+    return sortFields.reduce((acc, sortField) => {
+      const isDesc = sortField.indexOf('-') === 0
+      let currentSortProperty = sortField.replace(/^-/, '')
+
+      if (currentSortProperty === 'id') {
+        currentSortProperty = '_id'
+      } else {
+        currentSortProperty = getLocalizedSortProperty({
+          config,
+          fields,
+          locale,
+          segments: currentSortProperty.split('.'),
+        })
+      }
+      return [...acc, `${isDesc ? '-' : ''}${currentSortProperty}`]
+    }, [])
   } else if (sort.indexOf('-') === 0) {
     sortProperty = sort.substring(1)
   } else {

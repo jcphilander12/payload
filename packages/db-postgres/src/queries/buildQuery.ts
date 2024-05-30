@@ -31,7 +31,7 @@ type Result = {
   orderBy: {
     column: GenericColumn
     order: typeof asc | typeof desc
-  }
+  }[]
   selectFields: Record<string, GenericColumn>
   where: SQL
 }
@@ -49,54 +49,56 @@ const buildQuery = async function buildQuery({
   const joins: BuildQueryJoins = {}
   const joinAliases: BuildQueryJoinAliases = []
 
-  const orderBy: Result['orderBy'] = {
-    column: null,
-    order: null,
-  }
+  let orderBy: Result['orderBy'] = []
 
   if (sort) {
-    let sortPath
-
-    if (sort[0] === '-') {
-      sortPath = sort.substring(1)
-      orderBy.order = desc
-    } else {
-      sortPath = sort
-      orderBy.order = asc
-    }
-
-    try {
-      const { columnName: sortTableColumnName, table: sortTable } = getTableColumnFromPath({
-        adapter,
-        collectionPath: sortPath,
-        fields,
-        joinAliases,
-        joins,
-        locale,
-        pathSegments: sortPath.replace(/__/g, '.').split('.'),
-        selectFields,
-        tableName,
-        value: sortPath,
+    orderBy = sort
+      .split(',')
+      .map((sortString) => {
+        const sortPath = sortString.replace(/^-/, '')
+        try {
+          const { columnName: sortTableColumnName, table: sortTable } = getTableColumnFromPath({
+            adapter,
+            collectionPath: sortPath,
+            fields,
+            joinAliases,
+            joins,
+            locale,
+            pathSegments: sortPath.replace(/__/g, '.').split('.'),
+            selectFields,
+            tableName,
+            value: sortPath,
+          })
+          return {
+            column: sortTable?.[sortTableColumnName] ?? null,
+            order: sortString[0] === '-' ? desc : asc,
+          }
+        } catch (err) {
+          // continue
+        }
       })
-      orderBy.column = sortTable?.[sortTableColumnName]
-    } catch (err) {
-      // continue
-    }
+      .filter((sortInfo) => !!sortInfo)
   }
 
-  if (!orderBy?.column) {
-    orderBy.order = desc
+  if (!orderBy.length) {
+    const firstOrderBy = {
+      column: null,
+      order: null,
+    }
+    firstOrderBy.order = desc
     const createdAt = adapter.tables[tableName]?.createdAt
 
     if (createdAt) {
-      orderBy.column = createdAt
+      firstOrderBy.column = createdAt
     } else {
-      orderBy.column = adapter.tables[tableName].id
+      firstOrderBy.column = adapter.tables[tableName].id
     }
+
+    orderBy = [firstOrderBy]
   }
 
-  if (orderBy.column) {
-    selectFields.sort = orderBy.column
+  if (orderBy.length) {
+    selectFields.sort = orderBy[0].column
   }
 
   let where: SQL
