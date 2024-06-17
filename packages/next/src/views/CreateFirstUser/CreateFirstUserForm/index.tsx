@@ -1,4 +1,5 @@
 'use client'
+
 import type { FormProps } from '@payloadcms/ui/forms/Form'
 import type { FormState } from 'payload/types'
 
@@ -14,25 +15,32 @@ import { useTranslation } from '@payloadcms/ui/providers/Translation'
 import { getFormState } from '@payloadcms/ui/utilities/getFormState'
 import React from 'react'
 
-export const CreateFirstUserClient: React.FC<{
+import './index.scss'
+
+export const createFirstUserBaseClass = 'create-first-user__form'
+
+export const CreateFirstUserForm: React.FC<{
   initialState: FormState
-  userSlug: string
-}> = ({ initialState, userSlug }) => {
+  searchParams: { [key: string]: string | string[] | undefined }
+}> = ({ initialState, searchParams }) => {
+  const { t } = useTranslation()
+
+  const config = useConfig()
+
   const { getFieldMap } = useComponentMap()
 
   const {
-    routes: { admin, api: apiRoute },
+    admin: { user: userSlug },
+    routes: { admin, api },
     serverURL,
-  } = useConfig()
-
-  const { t } = useTranslation()
+  } = config
 
   const fieldMap = getFieldMap({ collectionSlug: userSlug })
 
   const onChange: FormProps['onChange'][0] = React.useCallback(
     async ({ formState: prevFormState }) => {
       return getFormState({
-        apiRoute,
+        apiRoute: api,
         body: {
           collectionSlug: userSlug,
           formState: prevFormState,
@@ -42,33 +50,35 @@ export const CreateFirstUserClient: React.FC<{
         serverURL,
       })
     },
-    [apiRoute, userSlug, serverURL],
+    [api, userSlug, serverURL],
   )
 
   return (
     <Form
-      action={`${serverURL}${apiRoute}/${userSlug}/first-register`}
+      action={`${api}/${userSlug}/first-register`}
       initialState={initialState}
       method="POST"
       onChange={[onChange]}
-      redirect={admin}
+      redirect={typeof searchParams?.redirect === 'string' ? searchParams.redirect : admin}
       validationOperation="create"
     >
-      <Email autoComplete="email" label={t('general:email')} name="email" required />
-      <Password
-        autoComplete="off"
-        label={t('authentication:newPassword')}
-        name="password"
-        required
-      />
-      <ConfirmPassword />
-      <RenderFields
-        fieldMap={fieldMap}
-        operation="create"
-        path=""
-        readOnly={false}
-        schemaPath={userSlug}
-      />
+      <fieldset className={`${createFirstUserBaseClass}__inputWrap`}>
+        <legend>
+          <h1>{t('general:welcome')}</h1>
+          <p>{t('authentication:beginCreateFirstUser')}</p>
+        </legend>
+
+        <Email autoComplete="email" label={t('general:email')} name="email" required />
+        <Password autoComplete="off" label={t('general:password')} name="password" required />
+        <ConfirmPassword />
+        <RenderFields
+          fieldMap={fieldMap}
+          operation="create"
+          path=""
+          readOnly={false}
+          schemaPath={userSlug}
+        />
+      </fieldset>
       <FormSubmit>{t('general:create')}</FormSubmit>
     </Form>
   )
