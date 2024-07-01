@@ -3,25 +3,20 @@
 import Link from 'next/link'
 import React, { Fragment, useEffect, useState } from 'react'
 
-import { useAuth } from '../../_providers/Auth'
+import { logout } from '../../actions/logout'
 
 export const LogoutPage: React.FC = () => {
-  const { logout } = useAuth()
   const [success, setSuccess] = useState('')
   const [error, setError] = useState('')
 
   useEffect(() => {
-    const performLogout = async () => {
-      try {
-        await logout()
-        setSuccess('Logged out successfully.')
-      } catch (_) {
-        setError('You are already logged out.')
-      }
+    try {
+      logout()
+      setSuccess('Logged out successfully.')
+    } catch (_) {
+      setError('You are already logged out.')
     }
-
-    void performLogout()
-  }, [logout])
+  }, [])
 
   return (
     <Fragment>

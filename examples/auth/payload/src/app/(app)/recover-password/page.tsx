@@ -1,17 +1,15 @@
-import { getPayloadHMR } from '@payloadcms/next/utilities'
-import { headers as getHeaders } from 'next/headers.js'
+import { headers as getHeaders } from 'next/headers'
 import { redirect } from 'next/navigation'
 import React from 'react'
 
-import config from '../../../payload.config'
 import { Gutter } from '../_components/Gutter'
+import { getUser } from '../_utilities/getUser'
 import { RecoverPasswordForm } from './RecoverPasswordForm'
 import classes from './index.module.scss'
 
 export default async function RecoverPassword() {
   const headers = getHeaders()
-  const payload = await getPayloadHMR({ config })
-  const { user } = await payload.auth({ headers })
+  const user = await getUser(headers)
 
   if (user) {
     redirect(`/account?message=${encodeURIComponent('Cannot recover password while logged in.')}`)
