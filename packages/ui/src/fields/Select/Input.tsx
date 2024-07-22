@@ -1,7 +1,6 @@
 'use client'
 import type { OptionObject } from 'payload'
 
-import { getTranslation } from '@payloadcms/translations'
 import React from 'react'
 
 import type { ReactSelectAdapterProps } from '../../elements/ReactSelect/types.js'
@@ -17,9 +16,9 @@ import './index.scss'
 
 export type SelectInputProps = {
   onChange?: ReactSelectAdapterProps['onChange']
-  options?: OptionObject[]
+  options?: ReactSelectAdapterProps['options']
   showError?: boolean
-  value?: string | string[]
+  value?: ReactSelectAdapterProps['value']
 } & Omit<
   SelectFieldProps,
   | 'custom'
@@ -62,26 +61,6 @@ export const SelectInput: React.FC<SelectInputProps> = (props) => {
     width,
   } = props
 
-  const { i18n } = useTranslation()
-
-  let valueToRender
-
-  if (hasMany && Array.isArray(value)) {
-    valueToRender = value.map((val) => {
-      const matchingOption = options.find((option) => option.value === val)
-      return {
-        label: matchingOption ? getTranslation(matchingOption.label, i18n) : val,
-        value: matchingOption?.value ?? val,
-      }
-    })
-  } else if (value) {
-    const matchingOption = options.find((option) => option.value === value)
-    valueToRender = {
-      label: matchingOption ? getTranslation(matchingOption.label, i18n) : value,
-      value: matchingOption?.value ?? value,
-    }
-  }
-
   return (
     <div
       className={[
@@ -114,12 +93,9 @@ export const SelectInput: React.FC<SelectInputProps> = (props) => {
           isMulti={hasMany}
           isSortable={isSortable}
           onChange={onChange}
-          options={options.map((option) => ({
-            ...option,
-            label: getTranslation(option.label, i18n),
-          }))}
+          options={options}
           showError={showError}
-          value={valueToRender as OptionObject}
+          value={value}
         />
         {AfterInput}
       </div>

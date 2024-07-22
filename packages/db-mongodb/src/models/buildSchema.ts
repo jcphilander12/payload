@@ -34,6 +34,7 @@ import {
   fieldAffectsData,
   fieldIsLocalized,
   fieldIsPresentationalOnly,
+  flattenOptionValues,
   tabHasName,
 } from 'payload/shared'
 
@@ -500,10 +501,7 @@ const fieldToSchemaMap: Record<string, FieldSchemaGenerator> = {
     const baseSchema = {
       ...formatBaseSchema(field, buildSchemaOptions),
       type: String,
-      enum: field.options.map((option) => {
-        if (typeof option === 'object') return option.value
-        return option
-      }),
+      enum: flattenOptionValues(field.options),
     }
 
     if (buildSchemaOptions.draftsEnabled || !field.required) {

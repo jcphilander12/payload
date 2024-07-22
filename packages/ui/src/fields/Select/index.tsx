@@ -11,6 +11,8 @@ import { useFieldProps } from '../../forms/FieldPropsProvider/index.js'
 import { useField } from '../../forms/useField/index.js'
 import { withCondition } from '../../forms/withCondition/index.js'
 import { SelectInput } from './Input.js'
+import { buildReactSelectOptions, buildReactSelectValues } from './utils.js'
+import { useTranslation } from '@payloadcms/ui'
 
 export type SelectFieldProps = {
   hasMany?: boolean
@@ -23,18 +25,6 @@ export type SelectFieldProps = {
   value?: string
   width?: string
 } & FormFieldBase
-
-const formatOptions = (options: Option[]): OptionObject[] =>
-  options.map((option) => {
-    if (typeof option === 'object' && (option.value || option.value === '')) {
-      return option
-    }
-
-    return {
-      label: option,
-      value: option,
-    } as OptionObject
-  })
 
 const _SelectField: React.FC<SelectFieldProps> = (props) => {
   const {
@@ -62,7 +52,16 @@ const _SelectField: React.FC<SelectFieldProps> = (props) => {
     width,
   } = props
 
-  const options = React.useMemo(() => formatOptions(optionsFromProps), [optionsFromProps])
+  const { i18n } = useTranslation()
+
+  const options = React.useMemo(
+    () =>
+      buildReactSelectOptions({
+        options: optionsFromProps,
+        i18n,
+      }),
+    [optionsFromProps],
+  )
 
   const memoizedValidate: ClientValidate = useCallback(
     (value, validationOptions) => {
@@ -82,7 +81,7 @@ const _SelectField: React.FC<SelectFieldProps> = (props) => {
   const disabled = readOnlyFromProps || readOnlyFromContext || formProcessing || formInitializing
 
   const onChange: ReactSelectAdapterProps['onChange'] = useCallback(
-    (selectedOption: OptionObject | OptionObject[]) => {
+    (selectedOption: { value: string; label: string }) => {
       if (!disabled) {
         let newValue: string | string[] = null
         if (selectedOption && hasMany) {
@@ -104,6 +103,12 @@ const _SelectField: React.FC<SelectFieldProps> = (props) => {
     },
     [disabled, hasMany, setValue, onChangeFromProps],
   )
+
+  const values = buildReactSelectValues({
+    options: optionsFromProps,
+    i18n,
+    values: Array.isArray(value) ? value : [value],
+  })
 
   return (
     <SelectInput
@@ -128,7 +133,7 @@ const _SelectField: React.FC<SelectFieldProps> = (props) => {
       required={required}
       showError={showError}
       style={style}
-      value={value as string | string[]}
+      value={values}
       width={width}
     />
   )

@@ -1,16 +1,26 @@
-import React from 'react'
+import * as React from 'react'
+import { SelectInput } from '@payloadcms/ui'
 
-import type { Post } from '../../payload-types.js'
+export const presidentOptions = [
+  {
+    label: 'Thomas Jefferson',
+    value: '3',
+  },
+  {
+    label: 'James Madison',
+    value: '4',
+  },
+]
 
-export const MyComponent: React.FC = () => {
-  const test: Post = {
-    id: 'string',
-    createdAt: 'string',
-    text: 'string',
-    updatedAt: 'string',
-  }
+export const MyComponent = async (args) => {
+  // you would likely want to fetch this data from an API
+  // this is just an example of async data "fetching"
+  const fetchedPresidents = await Promise.resolve(presidentOptions)
 
-  console.log({ test })
-
-  return <p>hi</p>
+  return (
+    <div>
+      <label className="field-label">Custom Select</label>
+      <SelectInput hasMany={true} path={args.path} options={fetchedPresidents} />
+    </div>
+  )
 }

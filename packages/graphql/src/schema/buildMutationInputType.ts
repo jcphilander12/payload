@@ -12,6 +12,7 @@ import type {
   GroupField,
   JSONField,
   NumberField,
+  Option,
   PointField,
   RadioField,
   RelationshipField,
@@ -37,9 +38,10 @@ import {
   GraphQLString,
 } from 'graphql'
 import { flattenTopLevelFields, toWords } from 'payload'
-import { fieldAffectsData, optionIsObject, tabHasName } from 'payload/shared'
+import { fieldAffectsData, tabHasName } from 'payload/shared'
 
 import { GraphQLJSON } from '../packages/graphql-type-json/index.js'
+import { buildOptionEnums } from '../utilities/buildOptionEnums.js'
 import combineParentName from '../utilities/combineParentName.js'
 import formatName from '../utilities/formatName.js'
 import { groupOrTabHasRequiredSubfield } from '../utilities/groupOrTabHasRequiredSubfield.js'
@@ -234,23 +236,7 @@ export function buildMutationInputType({
       const formattedName = `${combineParentName(parentName, field.name)}_MutationInput`
       let type: GraphQLType = new GraphQLEnumType({
         name: formattedName,
-        values: field.options.reduce((values, option) => {
-          if (optionIsObject(option)) {
-            return {
-              ...values,
-              [formatName(option.value)]: {
-                value: option.value,
-              },
-            }
-          }
-
-          return {
-            ...values,
-            [formatName(option)]: {
-              value: option,
-            },
-          }
-        }, {}),
+        values: buildOptionEnums(field.options),
       })
 
       type = field.hasMany ? new GraphQLList(type) : type

@@ -48,6 +48,7 @@ import type {
 import { FieldDescription } from '../../../exports/client/index.js'
 // eslint-disable-next-line payload/no-imports-from-exports-dir
 import { HiddenField } from '../../../exports/client/index.js'
+import { sanitizeServerSideOptions } from '../../../fields/Select/utils.js'
 
 function generateFieldPath(parentPath, name) {
   let tabPath = parentPath || ''
@@ -231,28 +232,13 @@ export const mapFields = (args: {
 
         let fieldComponentProps: FieldComponentProps
 
-        let fieldOptions: Option[]
-
-        if ('options' in field) {
-          fieldOptions = field.options.map((option) => {
-            if (typeof option === 'object' && typeof option.label === 'function') {
-              return {
-                label: option.label({ t }),
-                value: option.value,
-              }
-            }
-
-            return option
-          })
-        }
-
         const cellComponentProps: CellComponentProps = {
           name: 'name' in field ? field.name : undefined,
           fieldType: field.type,
           isFieldAffectingData,
           label: labelProps?.label || undefined,
           labels: 'labels' in field ? field.labels : undefined,
-          options: 'options' in field ? fieldOptions : undefined,
+          options: undefined,
           relationTo: 'relationTo' in field ? field.relationTo : undefined,
           schemaPath: path,
         }
@@ -557,20 +543,31 @@ export const mapFields = (args: {
             break
           }
           case 'radio': {
+            const radioOptions = field.options.map((option) => {
+              if (typeof option === 'object' && typeof option.label === 'function') {
+                return {
+                  label: option.label({ t }),
+                  value: option.value,
+                }
+              }
+
+              return option
+            })
+
             const radioField: RadioFieldProps = {
               ...baseFieldProps,
               name: field.name,
               className: field.admin?.className,
               disabled: field.admin?.disabled,
               layout: field.admin?.layout,
-              options: fieldOptions,
+              options: radioOptions,
               readOnly: field.admin?.readOnly,
               required: field.required,
               style: field.admin?.style,
               width: field.admin?.width,
             }
 
-            cellComponentProps.options = fieldOptions
+            cellComponentProps.options = radioOptions
             fieldComponentProps = radioField
             break
           }
@@ -741,6 +738,8 @@ export const mapFields = (args: {
             break
           }
           case 'select': {
+            const selectOptions = sanitizeServerSideOptions({ options: field.options, t })
+
             const selectField: SelectFieldProps = {
               ...baseFieldProps,
               name: field.name,
@@ -748,14 +747,14 @@ export const mapFields = (args: {
               disabled: field.admin?.disabled,
               hasMany: field.hasMany,
               isClearable: field.admin?.isClearable,
-              options: fieldOptions,
+              options: selectOptions,
               readOnly: field.admin?.readOnly,
               required: field.required,
               style: field.admin?.style,
               width: field.admin?.width,
             }
 
-            cellComponentProps.options = fieldOptions
+            cellComponentProps.options = selectOptions
             fieldComponentProps = selectField
             break
           }

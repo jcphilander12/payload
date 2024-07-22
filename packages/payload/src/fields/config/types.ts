@@ -203,7 +203,12 @@ export type OptionObject = {
   value: string
 }
 
-export type Option = OptionObject | string
+export type OptionGroup = {
+  label: LabelFunction | Record<string, string> | string
+  options: (OptionObject | string)[]
+}
+export type Option = OptionGroup | OptionObject | string
+export type RadioOption = OptionObject | string
 
 export interface FieldBase {
   access?: {
@@ -721,7 +726,7 @@ export type RadioField = {
    * Customize the DB enum name
    */
   enumName?: DBIdentifierName
-  options: Option[]
+  options: RadioOption[]
   type: 'radio'
 } & FieldBase
 
@@ -887,6 +892,13 @@ export function optionIsObject(option: Option): option is OptionObject {
 
 export function optionsAreObjects(options: Option[]): options is OptionObject[] {
   return Array.isArray(options) && typeof options?.[0] === 'object'
+}
+
+export function optionsAreGrouped(options: Option[]): options is OptionGroup[] {
+  return (
+    Array.isArray(options) &&
+    options.some((option) => option && typeof option === 'object' && 'options' in option)
+  )
 }
 
 export function optionIsValue(option: Option): option is string {

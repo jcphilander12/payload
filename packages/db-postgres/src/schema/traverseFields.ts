@@ -1,7 +1,6 @@
-/* eslint-disable no-param-reassign */
 import type { Relation } from 'drizzle-orm'
 import type { IndexBuilder, PgColumnBuilder } from 'drizzle-orm/pg-core'
-import type { Field, TabAsField } from 'payload'
+import type { Field, Option, TabAsField } from 'payload'
 
 import { relations } from 'drizzle-orm'
 import {
@@ -20,7 +19,7 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core'
 import { InvalidConfiguration } from 'payload'
-import { fieldAffectsData, optionIsObject } from 'payload/shared'
+import { fieldAffectsData, flattenOptionValues } from 'payload/shared'
 import toSnakeCase from 'to-snake-case'
 
 import type { GenericColumns, IDType, PostgresAdapter } from '../types.js'
@@ -234,13 +233,7 @@ export const traverseFields = ({
 
         adapter.enums[enumName] = pgEnum(
           enumName,
-          field.options.map((option) => {
-            if (optionIsObject(option)) {
-              return option.value
-            }
-
-            return option
-          }) as [string, ...string[]],
+          flattenOptionValues(field.options) as [string, ...string[]],
         )
 
         if (field.type === 'select' && field.hasMany) {
