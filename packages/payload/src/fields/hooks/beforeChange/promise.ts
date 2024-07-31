@@ -6,6 +6,7 @@ import type { Field, FieldHookArgs, TabAsField, ValidateOptions } from '../../co
 
 import { MissingEditorProp } from '../../../errors/index.js'
 import { deepMergeWithSourceArrays } from '../../../utilities/deepMerge.js'
+import { formatErrorLabels } from '../../../utilities/formatLabels.js'
 import { fieldAffectsData, tabHasName } from '../../config/types.js'
 import { getFieldPaths } from '../../getFieldPaths.js'
 import { beforeDuplicate } from './beforeDuplicate.js'
@@ -147,7 +148,7 @@ export const promise = async ({
 
       if (typeof validationResult === 'string') {
         errors.push({
-          field: fieldPath.join('.'),
+          field: formatErrorLabels(fieldPath),
           message: validationResult,
         })
       }
