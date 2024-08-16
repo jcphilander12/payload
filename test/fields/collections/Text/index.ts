@@ -156,6 +156,13 @@ const TextFields: CollectionConfig = {
       hidden: true,
     },
     {
+      name: 'adminHidden',
+      type: 'text',
+      admin: {
+        hidden: true,
+      },
+    },
+    {
       name: 'disableListColumnText',
       type: 'text',
       admin: {

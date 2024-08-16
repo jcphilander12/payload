@@ -279,6 +279,14 @@ describe('fields', () => {
         ).toBeHidden()
       })
     })
+
+    describe('admin.hidden', () => {
+      test('should be hidden in the edit view', async () => {
+        await page.goto(url.create)
+        await expect(page.locator('#field-text')).toBeVisible()
+        await expect(page.locator('#field-adminHidden')).toBeHidden()
+      })
+    })
   })
 
   describe('number', () => {
