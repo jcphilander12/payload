@@ -151,6 +151,11 @@ const TextFields: CollectionConfig = {
       maxRows: 4,
     },
     {
+      name: 'hidden',
+      type: 'text',
+      hidden: true,
+    },
+    {
       name: 'disableListColumnText',
       type: 'text',
       admin: {
@@ -168,6 +173,7 @@ const TextFields: CollectionConfig = {
     },
   ],
   slug: textFieldsSlug,
+  versions: true,
 }
 
 export default TextFields

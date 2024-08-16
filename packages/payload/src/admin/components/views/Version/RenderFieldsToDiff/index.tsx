@@ -21,6 +21,9 @@ const RenderFieldsToDiff: React.FC<Props> = ({
 }) => (
   <div className={baseClass}>
     {fields.map((field, i) => {
+      // Don't render hidden fields
+      if ('hidden' in field && field.hidden) return null
+
       const Component = fieldComponents[field.type]
 
       const isRichText = field.type === 'richText'
