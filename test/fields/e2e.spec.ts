@@ -287,6 +287,34 @@ describe('fields', () => {
         await expect(page.locator('#field-adminHidden')).toBeHidden()
       })
     })
+
+    describe('admin.hiddenInVersionView', () => {
+      test('should be hidden in the version view', async () => {
+        const doc = await payload.create({
+          collection: textFieldsSlug,
+          data: textDoc,
+        })
+        const versions = await payload.findVersions({
+          collection: textFieldsSlug,
+          where: { parent: { equals: doc.id } },
+          limit: 1,
+        })
+
+        await page.goto(url.version(doc.id, versions.docs[0].id))
+
+        await expect(
+          page.locator('.field-diff-label', {
+            hasText: exactText('Text'),
+          }),
+        ).toBeVisible()
+
+        await expect(
+          page.locator('.field-diff-label', {
+            hasText: exactText('Hidden In Version View'),
+          }),
+        ).toBeHidden()
+      })
+    })
   })
 
   describe('number', () => {

@@ -24,6 +24,9 @@ const RenderFieldsToDiff: React.FC<Props> = ({
       // Don't render hidden fields
       if ('hidden' in field && field.hidden) return null
 
+      // Don't render fields with admin.hiddenInVersionView
+      if ('hiddenInVersionView' in field.admin && field.admin.hiddenInVersionView) return null
+
       const Component = fieldComponents[field.type]
 
       const isRichText = field.type === 'richText'

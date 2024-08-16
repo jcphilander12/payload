@@ -117,6 +117,7 @@ type Admin = {
   disableListFilter?: boolean
   disabled?: boolean
   hidden?: boolean // it could make sense to rename this option to hiddenInEditView
+  hiddenInVersionView?: boolean
   position?: 'sidebar'
   readOnly?: boolean
   style?: CSSProperties

@@ -163,6 +163,13 @@ const TextFields: CollectionConfig = {
       },
     },
     {
+      name: 'hiddenInVersionView',
+      type: 'text',
+      admin: {
+        hiddenInVersionView: true,
+      },
+    },
+    {
       name: 'disableListColumnText',
       type: 'text',
       admin: {
