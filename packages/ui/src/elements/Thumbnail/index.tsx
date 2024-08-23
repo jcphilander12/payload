@@ -33,8 +33,7 @@ export const Thumbnail: React.FC<ThumbnailProps> = (props) => {
   const { className = '', doc: { filename, mimeType } = {}, fileSrc, imageCacheTag, size } = props
   const [fileExists, setFileExists] = React.useState(undefined)
   const classNames = [baseClass, `${baseClass}--size-${size || 'medium'}`, className].join(' ')
-  const fileType: 'audio' | 'document' | 'image' | 'unknown' | 'video' | false =
-    mimeType?.split('/')[0]
+  const fileType = (mimeType as string)?.split('/')[0]
 
   React.useEffect(() => {
     if (!fileSrc || !fileType) {
@@ -61,7 +60,10 @@ export const Thumbnail: React.FC<ThumbnailProps> = (props) => {
     <div className={classNames}>
       {fileExists === undefined && <ShimmerEffect height="100%" />}
       {fileExists && fileType === 'image' && (
-        <img alt={filename} src={`${fileSrc}${imageCacheTag ? `?${imageCacheTag}` : ''}`} />
+        <img
+          alt={filename as string}
+          src={`${fileSrc}${imageCacheTag ? `?${imageCacheTag}` : ''}`}
+        />
       )}
       {fileExists && fileType === 'video' && (
         <video
