@@ -8,6 +8,7 @@ import type { Column } from '../Table/index.js'
 
 import { useConfig } from '../../providers/Config/index.js'
 import { usePreferences } from '../../providers/Preferences/index.js'
+import { useTranslation } from '../../providers/Translation/index.js'
 import { buildColumnState } from './buildColumnState.js'
 import { filterFields } from './filterFields.js'
 import { getInitialColumns } from './getInitialColumns.js'
@@ -47,6 +48,7 @@ export const TableColumnsProvider: React.FC<Props> = ({
   const {
     config: { collections },
   } = useConfig()
+  const { i18n } = useTranslation()
 
   const collectionConfig = collections.find(
     (collectionConfig) => collectionConfig.slug === collectionSlug,
@@ -71,6 +73,7 @@ export const TableColumnsProvider: React.FC<Props> = ({
       columns: initialColumns,
       enableRowSelections,
       fields,
+      i18n,
       useAsTitle,
     }),
   )
@@ -157,6 +160,7 @@ export const TableColumnsProvider: React.FC<Props> = ({
               columns: initialColumns,
               enableRowSelections: true,
               fields,
+              i18n,
               useAsTitle,
             }),
           )
@@ -172,6 +176,7 @@ export const TableColumnsProvider: React.FC<Props> = ({
     fields,
     cellProps,
     defaultColumns,
+    i18n,
     useAsTitle,
     listPreferences,
     initialColumns,

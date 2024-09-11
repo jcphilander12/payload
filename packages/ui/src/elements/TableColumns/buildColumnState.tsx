@@ -1,4 +1,5 @@
 'use client'
+import type { I18nClient } from '@payloadcms/translations'
 import type {
   CellComponentProps,
   ClientField,
@@ -24,13 +25,15 @@ type Args = {
   columns?: ColumnPreferences
   enableRowSelections: boolean
   fields: ClientField[]
+  i18n: I18nClient
   useAsTitle: SanitizedCollectionConfig['admin']['useAsTitle']
 }
 
 export const buildColumnState = (args: Args): Column[] => {
-  const { cellProps, columnPreferences, columns, enableRowSelections, fields, useAsTitle } = args
+  const { cellProps, columnPreferences, columns, enableRowSelections, fields, i18n, useAsTitle } =
+    args
 
-  let sortedFieldMap = flattenFieldMap(fields)
+  let sortedFieldMap = flattenFieldMap({ fields, i18n })
 
   // place the `ID` field first, if it exists
   // do the same for the `useAsTitle` field with precedence over the `ID` field
@@ -101,11 +104,17 @@ export const buildColumnState = (args: Args): Column[] => {
         ? field.admin.components.Label
         : undefined
 
+    const label = field.labelWithPrefix
+      ? field.labelWithPrefix
+      : 'label' in field
+        ? field.label
+        : undefined
+
     const Label = (
       <FieldLabel
         field={field}
         Label={CustomLabelToRender}
-        label={'label' in field ? (field.label as StaticLabel) : undefined}
+        label={label ? (label as StaticLabel) : undefined}
         unstyled
       />
     )
@@ -119,7 +128,7 @@ export const buildColumnState = (args: Args): Column[] => {
       <SortColumn
         disable={fieldAffectsDataSubFields || field?._isPresentational || undefined}
         Label={Label}
-        label={'label' in field ? (field.label as StaticLabel) : undefined}
+        label={label ? (label as StaticLabel) : undefined}
         name={'name' in field ? field.name : undefined}
       />
     )
