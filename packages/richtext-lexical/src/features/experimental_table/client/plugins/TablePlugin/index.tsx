@@ -8,13 +8,14 @@ import type {
   LexicalNode,
   RangeSelection,
 } from 'lexical'
+import type { JsonObject } from 'payload'
 import type { JSX } from 'react'
 
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { TablePlugin as LexicalReactTablePlugin } from '@lexical/react/LexicalTablePlugin'
 import { INSERT_TABLE_COMMAND, TableNode } from '@lexical/table'
 import { mergeRegister } from '@lexical/utils'
-import { formatDrawerSlug, useEditDepth, useModal } from '@payloadcms/ui'
+import { formatDrawerSlug, useDrawerDepth, useModal } from '@payloadcms/ui'
 import { $getSelection, $isRangeSelection, COMMAND_PRIORITY_EDITOR, createCommand } from 'lexical'
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import * as React from 'react'
@@ -42,7 +43,7 @@ export type CellEditorConfig = Readonly<{
   theme?: EditorThemeClasses
 }>
 
-export const OPEN_TABLE_DRAWER_COMMAND: LexicalCommand<{}> = createCommand(
+export const OPEN_TABLE_DRAWER_COMMAND: LexicalCommand<JsonObject> = createCommand(
   'OPEN_EMBED_DRAWER_COMMAND',
 )
 
@@ -84,12 +85,12 @@ export const TablePlugin: PluginComponent = () => {
   const [editor] = useLexicalComposerContext()
   const cellContext = useContext(CellContext)
   const { closeModal, toggleModal } = useModal()
-  const editDepth = useEditDepth()
+  const drawerDepth = useDrawerDepth()
   const { uuid } = useEditorConfigContext()
 
   const drawerSlug = formatDrawerSlug({
     slug: 'lexical-table-create-' + uuid,
-    depth: editDepth,
+    depth: drawerDepth,
   })
 
   useEffect(() => {
@@ -118,7 +119,7 @@ export const TablePlugin: PluginComponent = () => {
         COMMAND_PRIORITY_EDITOR,
       ),
     )
-  }, [cellContext, editor, toggleModal])
+  }, [cellContext, editor, toggleModal, drawerSlug])
 
   return (
     <React.Fragment>

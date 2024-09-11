@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import type { Props, TogglerProps } from './types.js'
 
 import { XIcon } from '../../icons/X/index.js'
-import { EditDepthContext, useEditDepth } from '../../providers/EditDepth/index.js'
+import { DrawerDepthProvider, useDrawerDepth } from '../../providers/DrawerDepth/index.js'
 import { useTranslation } from '../../providers/Translation/index.js'
 import { Gutter } from '../Gutter/index.js'
 import './index.scss'
@@ -56,7 +56,7 @@ export const Drawer: React.FC<Props> = ({
 }) => {
   const { t } = useTranslation()
   const { closeModal, modalState } = useModal()
-  const drawerDepth = useEditDepth()
+  const drawerDepth = useDrawerDepth()
 
   const [isOpen, setIsOpen] = useState(false)
   const [animateIn, setAnimateIn] = useState(false)
@@ -102,7 +102,7 @@ export const Drawer: React.FC<Props> = ({
         >
           <div className={`${baseClass}__blur-bg-content`} />
           <Gutter className={`${baseClass}__content-children`} left={gutter} right={gutter}>
-            <EditDepthContext.Provider value={drawerDepth + 1}>
+            <DrawerDepthProvider>
               {Header}
               {Header === undefined && (
                 <div className={`${baseClass}__header`}>
@@ -124,7 +124,7 @@ export const Drawer: React.FC<Props> = ({
                 </div>
               )}
               {children}
-            </EditDepthContext.Provider>
+            </DrawerDepthProvider>
           </Gutter>
         </div>
       </Modal>

@@ -301,17 +301,17 @@ describe('uploads', () => {
 
     await openDocDrawer(page, '#field-audio  .upload__listToggler')
 
-    const listDrawer = page.locator('[id^=list-drawer_1_]')
+    const listDrawer = page.locator('[id^=drawer_1_list-drawer]')
     await expect(listDrawer).toBeVisible()
 
     await openDocDrawer(page, 'button.list-drawer__create-new-button.doc-drawer__toggler')
-    await expect(page.locator('[id^=doc-drawer_media_2_]')).toBeVisible()
+    await expect(page.locator('[id^=drawer_2_doc-drawer__media]')).toBeVisible()
 
     // upload an image and try to select it
     await page
-      .locator('[id^=doc-drawer_media_2_] .file-field__upload input[type="file"]')
+      .locator('[id^=drawer_2_doc-drawer__media] .file-field__upload input[type="file"]')
       .setInputFiles(path.resolve(dirname, './image.png'))
-    await page.locator('[id^=doc-drawer_media_2_] button#action-save').click()
+    await page.locator('[id^=drawer_2_doc-drawer__media] button#action-save').click()
     await expect(page.locator('.payload-toast-container .toast-success')).toContainText(
       'successfully',
     )
@@ -336,7 +336,7 @@ describe('uploads', () => {
 
     await openDocDrawer(page, '.upload__listToggler')
 
-    const listDrawer = page.locator('[id^=list-drawer_1_]')
+    const listDrawer = page.locator('[id^=drawer_1_list-drawer]')
     await expect(listDrawer).toBeVisible()
 
     await expect(listDrawer.locator('tbody tr')).toHaveCount(1)

@@ -400,7 +400,7 @@ export function UploadInput(props: UploadInputProps) {
       loadedValueDocsRef.current = true
     }
 
-    if (!loadedValueDocsRef.current) {
+    if (!loadedValueDocsRef.current && value) {
       void loadInitialDocs()
     }
   }, [populateDocs, activeRelationTo, value])
