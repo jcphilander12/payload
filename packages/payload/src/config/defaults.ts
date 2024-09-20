@@ -1,5 +1,7 @@
 import type { Config } from './types.js'
 
+import defaultAccess from '../auth/defaultAccess.js'
+
 export const defaults: Omit<Config, 'db' | 'editor' | 'secret'> = {
   admin: {
     avatar: 'gravatar',
@@ -45,6 +47,14 @@ export const defaults: Omit<Config, 'db' | 'editor' | 'secret'> = {
   i18n: {},
   localization: false,
   maxDepth: 10,
+  queues: {
+    access: {
+      run: defaultAccess,
+    },
+    deleteJobOnComplete: true,
+    depth: 0,
+    jobs: [],
+  },
   routes: {
     admin: '/admin',
     api: '/api',

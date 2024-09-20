@@ -17,6 +17,7 @@ import { InvalidConfiguration } from '../errors/index.js'
 import { sanitizeGlobals } from '../globals/config/sanitize.js'
 import { getLockedDocumentsCollection } from '../lockedDocuments/lockedDocumentsCollection.js'
 import getPreferencesCollection from '../preferences/preferencesCollection.js'
+import { getDefaultJobsCollection } from '../queues/jobsCollection.js'
 import checkDuplicateCollections from '../utilities/checkDuplicateCollections.js'
 import { defaults } from './defaults.js'
 
@@ -65,6 +66,14 @@ export const sanitizeConfig = async (incomingConfig: Config): Promise<SanitizedC
     graphQL: {
       ...defaults.graphQL,
       ...incomingConfig?.graphQL,
+    },
+    queues: {
+      ...defaults.queues,
+      ...incomingConfig?.queues,
+      access: {
+        ...defaults.queues.access,
+        ...incomingConfig?.queues?.access,
+      },
     },
     routes: {
       ...defaults.routes,
@@ -150,6 +159,18 @@ export const sanitizeConfig = async (incomingConfig: Config): Promise<SanitizedC
   configWithDefaults.collections.push(getLockedDocumentsCollection(config as unknown as Config))
   configWithDefaults.collections.push(getPreferencesCollection(config as unknown as Config))
   configWithDefaults.collections.push(migrationsCollection)
+
+  if (Array.isArray(configWithDefaults.queues?.jobs) && configWithDefaults.queues.jobs.length > 0) {
+    let defaultJobsCollection = getDefaultJobsCollection(config as unknown as Config)
+
+    if (typeof configWithDefaults.queues.jobsCollectionOverrides === 'function') {
+      defaultJobsCollection = configWithDefaults.queues.jobsCollectionOverrides({
+        defaultJobsCollection,
+      })
+    }
+
+    configWithDefaults.collections.push(defaultJobsCollection)
+  }
 
   const richTextSanitizationPromises: Array<(config: SanitizedConfig) => Promise<void>> = []
   for (let i = 0; i < config.collections.length; i++) {

@@ -995,6 +995,17 @@ export type {
   PreferenceUpdateRequest,
   TabsPreferences,
 } from './preferences/types.js'
+export type {
+  BaseJob,
+  JobConfig,
+  JobRunner,
+  JobRunnerArgs,
+  JobRunnerResult,
+  QueueConfig,
+  RunJobAccess,
+  RunJobAccessArgs,
+  StepConfig,
+} from './queues/config/types.js'
 export { getLocalI18n } from './translations/getLocalI18n.js'
 export * from './types/index.js'
 export { getFileByPath } from './uploads/getFileByPath.js'
@@ -1039,14 +1050,15 @@ export { killTransaction } from './utilities/killTransaction.js'
 export { mapAsync } from './utilities/mapAsync.js'
 export { mergeListSearchAndWhere } from './utilities/mergeListSearchAndWhere.js'
 export { buildVersionCollectionFields } from './versions/buildCollectionFields.js'
-export { buildVersionGlobalFields } from './versions/buildGlobalFields.js'
 export { checkDependencies }
+export { buildVersionGlobalFields } from './versions/buildGlobalFields.js'
 export { versionDefaults } from './versions/defaults.js'
 export { deleteCollectionVersions } from './versions/deleteCollectionVersions.js'
 export { enforceMaxVersions } from './versions/enforceMaxVersions.js'
 export { getLatestCollectionVersion } from './versions/getLatestCollectionVersion.js'
 export { getLatestGlobalVersion } from './versions/getLatestGlobalVersion.js'
 export { saveVersion } from './versions/saveVersion.js'
+
 export type { TypeWithVersion } from './versions/types.js'
 
 export { deepMergeSimple } from '@payloadcms/translations/utilities'
