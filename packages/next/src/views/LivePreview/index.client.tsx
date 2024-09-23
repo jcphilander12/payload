@@ -121,6 +121,7 @@ const PreviewView: React.FC<Props> = ({
         apiRoute,
         body: {
           id,
+          collectionSlug,
           docPreferences,
           formState: prevFormState,
           operation,
@@ -131,7 +132,7 @@ const PreviewView: React.FC<Props> = ({
 
       return state
     },
-    [serverURL, apiRoute, id, operation, schemaPath, getDocPreferences],
+    [serverURL, apiRoute, collectionSlug, id, operation, schemaPath, getDocPreferences],
   )
 
   return (
