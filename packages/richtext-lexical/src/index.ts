@@ -1,3 +1,4 @@
+import type { JSONSchema4 } from 'json-schema'
 import type { SerializedEditorState } from 'lexical'
 import type { EditorConfig as LexicalEditorConfig } from 'lexical/LexicalEditor'
 import type { RichTextAdapter } from 'payload/types'
@@ -98,18 +99,32 @@ export function lexicalEditor(props?: LexicalEditorProps): LexicalRichTextAdapte
       })
     },
     editorConfig: finalSanitizedEditorConfig,
-    outputSchema: ({ isRequired }) => {
-      return {
+    outputSchema: ({
+      collectionIDFieldTypes,
+      config,
+      field,
+      interfaceNameDefinitions,
+      isRequired,
+      payload,
+    }) => {
+      let outputSchema: JSONSchema4 = {
         // This schema matches the SerializedEditorState type so far, that it's possible to cast SerializedEditorState to this schema without any errors.
         // In the future, we should
         // 1) allow recursive children
         // 2) Pass in all the different types for every node added to the editorconfig. This can be done with refs in the schema.
+        type: withNullableJSONSchemaType('object', isRequired),
         properties: {
           root: {
+            type: 'object',
             additionalProperties: false,
             properties: {
+              type: {
+                type: 'string',
+              },
               children: {
+                type: 'array',
                 items: {
+                  type: 'object',
                   additionalProperties: true,
                   properties: {
                     type: {
@@ -120,9 +135,7 @@ export function lexicalEditor(props?: LexicalEditorProps): LexicalRichTextAdapte
                     },
                   },
                   required: ['type', 'version'],
-                  type: 'object',
                 },
-                type: 'array',
               },
               direction: {
                 oneOf: [
@@ -135,31 +148,41 @@ export function lexicalEditor(props?: LexicalEditorProps): LexicalRichTextAdapte
                 ],
               },
               format: {
-                enum: ['left', 'start', 'center', 'right', 'end', 'justify', ''], // ElementFormatType, since the root node is an element
                 type: 'string',
+                enum: ['left', 'start', 'center', 'right', 'end', 'justify', ''], // ElementFormatType, since the root node is an element
               },
               indent: {
                 type: 'integer',
-              },
-              type: {
-                type: 'string',
               },
               version: {
                 type: 'integer',
               },
             },
             required: ['children', 'direction', 'format', 'indent', 'type', 'version'],
-            type: 'object',
           },
         },
         required: ['root'],
-        type: withNullableJSONSchemaType('object', isRequired),
       }
+      for (const modifyOutputSchema of finalSanitizedEditorConfig.features.generatedTypes
+        .modifyOutputSchemas) {
+        outputSchema = modifyOutputSchema({
+          collectionIDFieldTypes,
+          config,
+          currentSchema: outputSchema,
+          field,
+          interfaceNameDefinitions,
+          isRequired,
+          payload,
+        })
+      }
+
+      return outputSchema
     },
     populationPromise({
       context,
       currentDepth,
       depth,
+      draft,
       field,
       findMany,
       flattenLocales,
@@ -175,6 +198,7 @@ export function lexicalEditor(props?: LexicalEditorProps): LexicalRichTextAdapte
           context,
           currentDepth,
           depth,
+          draft,
           editorPopulationPromises: finalSanitizedEditorConfig.features.populationPromises,
           field,
           findMany,
@@ -196,7 +220,7 @@ export function lexicalEditor(props?: LexicalEditorProps): LexicalRichTextAdapte
 }
 
 export { BlockQuoteFeature } from './field/features/BlockQuote'
-export { BlocksFeature } from './field/features/Blocks'
+export { BlocksFeature, type BlocksFeatureProps } from './field/features/Blocks'
 export {
   $createBlockNode,
   $isBlockNode,
@@ -225,6 +249,7 @@ export {
 
 export { ParagraphFeature } from './field/features/Paragraph'
 export { RelationshipFeature } from './field/features/Relationship'
+
 export {
   $createRelationshipNode,
   $isRelationshipNode,
@@ -259,11 +284,11 @@ export { defaultHTMLConverters } from './field/features/converters/html/converte
 export type { HTMLConverter } from './field/features/converters/html/converter/types'
 export { consolidateHTMLConverters } from './field/features/converters/html/field'
 export { lexicalHTML } from './field/features/converters/html/field'
-
 export { TestRecorderFeature } from './field/features/debug/TestRecorder'
-export { TreeviewFeature } from './field/features/debug/TreeView'
 
+export { TreeViewFeature } from './field/features/debug/TreeView'
 export { BoldTextFeature } from './field/features/format/Bold'
+
 export { InlineCodeTextFeature } from './field/features/format/InlineCode'
 export { ItalicTextFeature } from './field/features/format/Italic'
 export { SectionWithEntries as FormatSectionWithEntries } from './field/features/format/common/floatingSelectToolbarSection'
@@ -271,16 +296,19 @@ export { StrikethroughTextFeature } from './field/features/format/strikethrough'
 export { SubscriptTextFeature } from './field/features/format/subscript'
 export { SuperscriptTextFeature } from './field/features/format/superscript'
 export { UnderlineTextFeature } from './field/features/format/underline'
+export { HorizontalRuleFeature } from './field/features/horizontalrule'
 export { IndentFeature } from './field/features/indent'
 export { CheckListFeature } from './field/features/lists/CheckList'
 export { OrderedListFeature } from './field/features/lists/OrderedList'
 export { UnorderedListFeature } from './field/features/lists/UnorderedList'
 export { LexicalPluginToLexicalFeature } from './field/features/migrations/LexicalPluginToLexical'
 export { SlateToLexicalFeature } from './field/features/migrations/SlateToLexical'
-export { SlateHeadingConverter } from './field/features/migrations/SlateToLexical/converter/converters/heading'
+export { SlateBlockquoteConverter } from './field/features/migrations/SlateToLexical/converter/converters/blockquote'
 
+export { SlateHeadingConverter } from './field/features/migrations/SlateToLexical/converter/converters/heading'
 export { SlateIndentConverter } from './field/features/migrations/SlateToLexical/converter/converters/indent'
 export { SlateLinkConverter } from './field/features/migrations/SlateToLexical/converter/converters/link'
+
 export { SlateListItemConverter } from './field/features/migrations/SlateToLexical/converter/converters/listItem'
 export { SlateOrderedListConverter } from './field/features/migrations/SlateToLexical/converter/converters/orderedList'
 export { SlateRelationshipConverter } from './field/features/migrations/SlateToLexical/converter/converters/relationship'

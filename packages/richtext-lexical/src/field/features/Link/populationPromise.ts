@@ -25,17 +25,21 @@ export const linkPopulationPromiseHOC = (
   }) => {
     const promises: Promise<void>[] = []
 
-    if (node?.fields?.doc?.value?.id && node?.fields?.doc?.relationTo) {
+    if (node?.fields?.doc?.value && node?.fields?.doc?.relationTo) {
       const collection = req.payload.collections[node?.fields?.doc?.relationTo]
 
       if (collection) {
         promises.push(
           populate({
-            id: node?.fields?.doc?.value?.id,
+            id:
+              typeof node?.fields?.doc?.value === 'object'
+                ? node?.fields?.doc?.value?.id
+                : node?.fields?.doc?.value,
             collection,
             currentDepth,
             data: node?.fields?.doc,
             depth,
+            draft: false,
             field,
             key: 'value',
             overrideAccess,
@@ -51,6 +55,7 @@ export const linkPopulationPromiseHOC = (
         currentDepth,
         data: node.fields || {},
         depth,
+        draft: false,
         editorPopulationPromises,
         fields: props.fields,
         findMany,

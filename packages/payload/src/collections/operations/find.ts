@@ -37,42 +37,43 @@ async function find<T extends TypeWithID & Record<string, unknown>>(
 ): Promise<PaginatedDocs<T>> {
   let args = incomingArgs
 
-  // /////////////////////////////////////
-  // beforeOperation - Collection
-  // /////////////////////////////////////
-
-  await args.collection.config.hooks.beforeOperation.reduce(async (priorHook, hook) => {
-    await priorHook
-
-    args =
-      (await hook({
-        args,
-        collection: args.collection.config,
-        context: args.req.context,
-        operation: 'read',
-      })) || args
-  }, Promise.resolve())
-
-  const {
-    collection: { config: collectionConfig },
-    collection,
-    currentDepth,
-    depth,
-    disableErrors,
-    draft: draftsEnabled,
-    limit,
-    overrideAccess,
-    page,
-    pagination = true,
-    req: { locale, payload },
-    req,
-    showHiddenFields,
-    sort,
-    where,
-  } = args
-
   try {
-    const shouldCommit = await initTransaction(req)
+    const shouldCommit = await initTransaction(args.req)
+
+    // /////////////////////////////////////
+    // beforeOperation - Collection
+    // /////////////////////////////////////
+
+    await args.collection.config.hooks.beforeOperation.reduce(async (priorHook, hook) => {
+      await priorHook
+
+      args =
+        (await hook({
+          args,
+          collection: args.collection.config,
+          context: args.req.context,
+          operation: 'read',
+          req: args.req,
+        })) || args
+    }, Promise.resolve())
+
+    const {
+      collection: { config: collectionConfig },
+      collection,
+      currentDepth,
+      depth,
+      disableErrors,
+      draft: draftsEnabled,
+      limit,
+      overrideAccess,
+      page,
+      pagination = true,
+      req: { fallbackLocale, locale, payload },
+      req,
+      showHiddenFields,
+      sort,
+      where,
+    } = args
 
     // /////////////////////////////////////
     // Access
@@ -141,7 +142,7 @@ async function find<T extends TypeWithID & Record<string, unknown>>(
         where,
       })
 
-      result = await payload.db.find<T>({
+      const dbArgs = {
         collection: collectionConfig.slug,
         limit: sanitizedLimit,
         locale,
@@ -150,7 +151,13 @@ async function find<T extends TypeWithID & Record<string, unknown>>(
         req,
         sort,
         where: fullWhere,
-      })
+      }
+
+      if (collectionConfig?.db?.find) {
+        result = await collectionConfig.db.find<T>(dbArgs)
+      } else {
+        result = await payload.db.find<T>(dbArgs)
+      }
     }
 
     // /////////////////////////////////////
@@ -195,8 +202,11 @@ async function find<T extends TypeWithID & Record<string, unknown>>(
             currentDepth,
             depth,
             doc,
+            draft: draftsEnabled,
+            fallbackLocale,
             findMany: true,
             global: null,
+            locale,
             overrideAccess,
             req,
             showHiddenFields,
@@ -253,7 +263,7 @@ async function find<T extends TypeWithID & Record<string, unknown>>(
 
     return result
   } catch (error: unknown) {
-    await killTransaction(req)
+    await killTransaction(args.req)
     throw error
   }
 }

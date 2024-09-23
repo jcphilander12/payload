@@ -41,6 +41,16 @@ const TextFields: CollectionConfig = {
       type: 'text',
     },
     {
+      name: 'defaultString',
+      defaultValue: defaultText,
+      type: 'text',
+    },
+    {
+      name: 'defaultEmptyString',
+      defaultValue: '',
+      type: 'text',
+    },
+    {
       name: 'defaultFunction',
       defaultValue: () => defaultText,
       type: 'text',
@@ -110,6 +120,78 @@ const TextFields: CollectionConfig = {
         },
       },
       type: 'text',
+    },
+    {
+      name: 'hasMany',
+      type: 'text',
+      hasMany: true,
+    },
+    {
+      name: 'validatesHasMany',
+      type: 'text',
+      hasMany: true,
+      minLength: 3,
+    },
+    {
+      name: 'localizedHasMany',
+      type: 'text',
+      hasMany: true,
+      localized: true,
+    },
+    {
+      name: 'withMinRows',
+      type: 'text',
+      hasMany: true,
+      minRows: 2,
+    },
+    {
+      name: 'withMaxRows',
+      type: 'text',
+      hasMany: true,
+      maxRows: 4,
+    },
+    {
+      name: 'disableListColumnText',
+      type: 'text',
+      admin: {
+        disableListColumn: true,
+        disableListFilter: false,
+      },
+    },
+    {
+      name: 'disableListFilterText',
+      type: 'text',
+      admin: {
+        disableListColumn: false,
+        disableListFilter: true,
+      },
+    },
+    {
+      name: 'array',
+      type: 'array',
+      fields: [
+        {
+          name: 'texts',
+          type: 'text',
+          hasMany: true,
+        },
+      ],
+    },
+    {
+      name: 'blocks',
+      type: 'blocks',
+      blocks: [
+        {
+          slug: 'block',
+          fields: [
+            {
+              name: 'texts',
+              type: 'text',
+              hasMany: true,
+            },
+          ],
+        },
+      ],
     },
   ],
   slug: textFieldsSlug,

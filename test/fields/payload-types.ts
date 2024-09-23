@@ -6,6 +6,17 @@
  * and re-run `payload generate:types` to regenerate this file.
  */
 
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "BlockColumns".
+ */
+export type BlockColumns =
+  | {
+      text?: string | null
+      id?: string | null
+    }[]
+  | null
+
 export interface Config {
   collections: {
     'lexical-fields': LexicalField
@@ -36,13 +47,20 @@ export interface Config {
     'payload-preferences': PayloadPreference
     'payload-migrations': PayloadMigration
   }
-  globals: {}
+  globals: {
+    tabsWithRichText: TabsWithRichText
+  }
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lexical-fields".
+ */
 export interface LexicalField {
   id: string
   title: string
   lexicalSimple?: {
     root: {
+      type: string
       children: {
         type: string
         version: number
@@ -51,13 +69,13 @@ export interface LexicalField {
       direction: ('ltr' | 'rtl') | null
       format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
       indent: number
-      type: string
       version: number
     }
     [k: string]: unknown
   } | null
   lexicalWithBlocks: {
     root: {
+      type: string
       children: {
         type: string
         version: number
@@ -66,7 +84,6 @@ export interface LexicalField {
       direction: ('ltr' | 'rtl') | null
       format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
       indent: number
-      type: string
       version: number
     }
     [k: string]: unknown
@@ -74,11 +91,16 @@ export interface LexicalField {
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lexical-migrate-fields".
+ */
 export interface LexicalMigrateField {
   id: string
   title: string
   lexicalWithLexicalPluginData?: {
     root: {
+      type: string
       children: {
         type: string
         version: number
@@ -87,13 +109,28 @@ export interface LexicalMigrateField {
       direction: ('ltr' | 'rtl') | null
       format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
       indent: number
+      version: number
+    }
+    [k: string]: unknown
+  } | null
+  lexicalWithSlateData?: {
+    root: {
       type: string
+      children: {
+        type: string
+        version: number
+        [k: string]: unknown
+      }[]
+      direction: ('ltr' | 'rtl') | null
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+      indent: number
       version: number
     }
     [k: string]: unknown
   } | null
   lexicalSimple?: {
     root: {
+      type: string
       children: {
         type: string
         version: number
@@ -102,7 +139,6 @@ export interface LexicalMigrateField {
       direction: ('ltr' | 'rtl') | null
       format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
       indent: number
-      type: string
       version: number
     }
     [k: string]: unknown
@@ -111,6 +147,7 @@ export interface LexicalMigrateField {
   groupWithLexicalField?: {
     lexicalInGroupField?: {
       root: {
+        type: string
         children: {
           type: string
           version: number
@@ -119,7 +156,6 @@ export interface LexicalMigrateField {
         direction: ('ltr' | 'rtl') | null
         format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
         indent: number
-        type: string
         version: number
       }
       [k: string]: unknown
@@ -130,6 +166,7 @@ export interface LexicalMigrateField {
     | {
         lexicalInArrayField?: {
           root: {
+            type: string
             children: {
               type: string
               version: number
@@ -138,7 +175,6 @@ export interface LexicalMigrateField {
             direction: ('ltr' | 'rtl') | null
             format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
             indent: number
-            type: string
             version: number
           }
           [k: string]: unknown
@@ -150,6 +186,10 @@ export interface LexicalMigrateField {
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
 export interface User {
   id: string
   canViewConditionalField?: boolean | null
@@ -164,11 +204,22 @@ export interface User {
   lockUntil?: string | null
   password: string | null
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "array-fields".
+ */
 export interface ArrayField {
   id: string
   title?: string | null
   items: {
     text: string
+    localizedText?: string | null
+    subArray?:
+      | {
+          text?: string | null
+          id?: string | null
+        }[]
+      | null
     id?: string | null
   }[]
   collapsedArray?:
@@ -214,9 +265,19 @@ export interface ArrayField {
         id?: string | null
       }[]
     | null
+  disableSort?:
+    | {
+        text: string
+        id?: string | null
+      }[]
+    | null
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "block-fields".
+ */
 export interface BlockField {
   id: string
   blocks: (
@@ -266,7 +327,101 @@ export interface BlockField {
         blockType: 'tabs'
       }
   )[]
+  duplicate: (
+    | {
+        text: string
+        richText?:
+          | {
+              [k: string]: unknown
+            }[]
+          | null
+        id?: string | null
+        blockName?: string | null
+        blockType: 'content'
+      }
+    | {
+        number: number
+        id?: string | null
+        blockName?: string | null
+        blockType: 'number'
+      }
+    | {
+        subBlocks?:
+          | (
+              | {
+                  text: string
+                  id?: string | null
+                  blockName?: string | null
+                  blockType: 'text'
+                }
+              | {
+                  number: number
+                  id?: string | null
+                  blockName?: string | null
+                  blockType: 'number'
+                }
+            )[]
+          | null
+        id?: string | null
+        blockName?: string | null
+        blockType: 'subBlocks'
+      }
+    | {
+        textInCollapsible?: string | null
+        textInRow?: string | null
+        id?: string | null
+        blockName?: string | null
+        blockType: 'tabs'
+      }
+  )[]
   collapsedByDefaultBlocks: (
+    | {
+        text: string
+        richText?:
+          | {
+              [k: string]: unknown
+            }[]
+          | null
+        id?: string | null
+        blockName?: string | null
+        blockType: 'localizedContent'
+      }
+    | {
+        number: number
+        id?: string | null
+        blockName?: string | null
+        blockType: 'localizedNumber'
+      }
+    | {
+        subBlocks?:
+          | (
+              | {
+                  text: string
+                  id?: string | null
+                  blockName?: string | null
+                  blockType: 'text'
+                }
+              | {
+                  number: number
+                  id?: string | null
+                  blockName?: string | null
+                  blockType: 'number'
+                }
+            )[]
+          | null
+        id?: string | null
+        blockName?: string | null
+        blockType: 'localizedSubBlocks'
+      }
+    | {
+        textInCollapsible?: string | null
+        textInRow?: string | null
+        id?: string | null
+        blockName?: string | null
+        blockType: 'localizedTabs'
+      }
+  )[]
+  disableSort: (
     | {
         text: string
         richText?:
@@ -392,6 +547,37 @@ export interface BlockField {
             blockName?: string | null
             blockType: 'block-b'
           }
+        | {
+            group?: {
+              text?: string | null
+            }
+            id?: string | null
+            blockName?: string | null
+            blockType: 'group-block'
+          }
+      )[]
+    | null
+  blocksWithSimilarGroup?:
+    | (
+        | {
+            group?: {
+              text?: string | null
+            }
+            id?: string | null
+            blockName?: string | null
+            blockType: 'group-block'
+          }
+        | {
+            items?:
+              | {
+                  title2: string
+                  id?: string | null
+                }[]
+              | null
+            id?: string | null
+            blockName?: string | null
+            blockType: 'block-b'
+          }
       )[]
     | null
   blocksWithMinRows?:
@@ -418,15 +604,74 @@ export interface BlockField {
           }
       )[]
     | null
+  relationshipBlocks?:
+    | {
+        relationship?: (string | null) | TextField
+        id?: string | null
+        blockName?: string | null
+        blockType: 'relationships'
+      }[]
+    | null
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "text-fields".
+ */
+export interface TextField {
+  id: string
+  text: string
+  localizedText?: string | null
+  i18nText?: string | null
+  defaultString?: string | null
+  defaultEmptyString?: string | null
+  defaultFunction?: string | null
+  defaultAsync?: string | null
+  overrideLength?: string | null
+  fieldWithDefaultValue?: string | null
+  dependentOnFieldWithDefaultValue?: string | null
+  customLabel?: string | null
+  customError?: string | null
+  beforeAndAfterInput?: string | null
+  hasMany?: string[] | null
+  validatesHasMany?: string[] | null
+  localizedHasMany?: string[] | null
+  withMinRows?: string[] | null
+  withMaxRows?: string[] | null
+  disableListColumnText?: string | null
+  disableListFilterText?: string | null
+  array?:
+    | {
+        texts?: string[] | null
+        id?: string | null
+      }[]
+    | null
+  blocks?:
+    | {
+        texts?: string[] | null
+        id?: string | null
+        blockName?: string | null
+        blockType: 'block'
+      }[]
+    | null
+  updatedAt: string
+  createdAt: string
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "checkbox-fields".
+ */
 export interface CheckboxField {
   id: string
   checkbox: boolean
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "code-fields".
+ */
 export interface CodeField {
   id: string
   javascript?: string | null
@@ -437,6 +682,10 @@ export interface CodeField {
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "collapsible-fields".
+ */
 export interface CollapsibleField {
   id: string
   text: string
@@ -447,6 +696,12 @@ export interface CollapsibleField {
     }
   }
   someText?: string | null
+  group2?: {
+    textWithinGroup?: string | null
+    subGroup?: {
+      textWithinSubGroup?: string | null
+    }
+  }
   functionTitleField?: string | null
   componentTitleField?: string | null
   nestedTitle?: string | null
@@ -459,6 +714,10 @@ export interface CollapsibleField {
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "conditional-logic".
+ */
 export interface ConditionalLogic {
   id: string
   text: string
@@ -480,6 +739,10 @@ export interface ConditionalLogic {
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "date-fields".
+ */
 export interface DateField {
   id: string
   default: string
@@ -491,12 +754,20 @@ export interface DateField {
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "radio-fields".
+ */
 export interface RadioField {
   id: string
   radio?: ('one' | 'two' | 'three') | null
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "group-fields".
+ */
 export interface GroupField {
   id: string
   group: {
@@ -513,6 +784,14 @@ export interface GroupField {
         | null
     }
   }
+  arrayOfGroups?:
+    | {
+        groupItem?: {
+          text?: string | null
+        }
+        id?: string | null
+      }[]
+    | null
   potentiallyEmptyGroup?: {
     text?: string | null
   }
@@ -540,12 +819,39 @@ export interface GroupField {
       }
     }
   }
+  camelCaseGroup?: {
+    array?:
+      | {
+          text?: string | null
+          array?:
+            | {
+                text?: string | null
+                id?: string | null
+              }[]
+            | null
+          id?: string | null
+        }[]
+      | null
+    nesGroup?: {
+      arr?:
+        | {
+            text?: string | null
+            id?: string | null
+          }[]
+        | null
+    }
+  }
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "row-fields".
+ */
 export interface RowField {
   id: string
   title: string
+  disableListColumnText?: string | null
   field_with_width_a?: string | null
   field_with_width_b?: string | null
   field_within_collapsible_a?: string | null
@@ -553,10 +859,15 @@ export interface RowField {
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "indexed-fields".
+ */
 export interface IndexedField {
   id: string
   text: string
   uniqueText?: string | null
+  uniqueRequiredText: string
   /**
    * @minItems 2
    * @maxItems 2
@@ -576,6 +887,10 @@ export interface IndexedField {
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "json-fields".
+ */
 export interface JsonField {
   id: string
   json?:
@@ -587,9 +902,24 @@ export interface JsonField {
     | number
     | boolean
     | null
+  group?: {
+    jsonWithinGroup?:
+      | {
+          [k: string]: unknown
+        }
+      | unknown[]
+      | string
+      | number
+      | boolean
+      | null
+  }
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "number-fields".
+ */
 export interface NumberField {
   id: string
   number?: number | null
@@ -604,9 +934,27 @@ export interface NumberField {
   validatesHasMany?: number[] | null
   localizedHasMany?: number[] | null
   withMinRows?: number[] | null
+  array?:
+    | {
+        numbers?: number[] | null
+        id?: string | null
+      }[]
+    | null
+  blocks?:
+    | {
+        numbers?: number[] | null
+        id?: string | null
+        blockName?: string | null
+        blockType: 'block'
+      }[]
+    | null
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "point-fields".
+ */
 export interface PointField {
   id: string
   /**
@@ -629,6 +977,10 @@ export interface PointField {
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "relationship-fields".
+ */
 export interface RelationshipField {
   id: string
   text?: string | null
@@ -653,6 +1005,8 @@ export interface RelationshipField {
           }
       )[]
     | null
+  relationNoHasManyNonPolymorphic?: (string | null) | TextField
+  relationHasManyNonPolymorphic?: (string | TextField)[] | null
   relationToSelf?: (string | null) | RelationshipField
   relationToSelfSelectOnly?: (string | null) | RelationshipField
   relationWithDynamicDefault?: (string | null) | User
@@ -678,27 +1032,16 @@ export interface RelationshipField {
   updatedAt: string
   createdAt: string
 }
-export interface TextField {
-  id: string
-  text: string
-  localizedText?: string | null
-  i18nText?: string | null
-  defaultFunction?: string | null
-  defaultAsync?: string | null
-  overrideLength?: string | null
-  fieldWithDefaultValue?: string | null
-  dependentOnFieldWithDefaultValue?: string | null
-  customLabel?: string | null
-  customError?: string | null
-  beforeAndAfterInput?: string | null
-  updatedAt: string
-  createdAt: string
-}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rich-text-fields".
+ */
 export interface RichTextField {
   id: string
   title: string
   lexicalCustomFields: {
     root: {
+      type: string
       children: {
         type: string
         version: number
@@ -707,7 +1050,6 @@ export interface RichTextField {
       direction: ('ltr' | 'rtl') | null
       format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
       indent: number
-      type: string
       version: number
     }
     [k: string]: unknown
@@ -715,6 +1057,7 @@ export interface RichTextField {
   lexicalCustomFields_html?: string | null
   lexical?: {
     root: {
+      type: string
       children: {
         type: string
         version: number
@@ -723,7 +1066,6 @@ export interface RichTextField {
       direction: ('ltr' | 'rtl') | null
       format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
       indent: number
-      type: string
       version: number
     }
     [k: string]: unknown
@@ -765,6 +1107,10 @@ export interface RichTextField {
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "select-fields".
+ */
 export interface SelectField {
   id: string
   select?: ('one' | 'two' | 'three') | null
@@ -779,6 +1125,10 @@ export interface SelectField {
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tabs-fields".
+ */
 export interface TabsField {
   id: string
   sidebarField?: string | null
@@ -838,6 +1188,15 @@ export interface TabsField {
   }
   textInRow: string
   numberInRow: number
+  json?:
+    | {
+        [k: string]: unknown
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null
   tab: {
     array: {
       text: string
@@ -845,6 +1204,12 @@ export interface TabsField {
     }[]
     text?: string | null
     defaultValue?: string | null
+    arrayInRow?:
+      | {
+          textInArrayInRow?: string | null
+          id?: string | null
+        }[]
+      | null
   }
   namedTabWithDefaultValue: {
     defaultValue?: string | null
@@ -861,6 +1226,20 @@ export interface TabsField {
     afterChange?: boolean | null
     afterRead?: boolean | null
   }
+  camelCaseTab: {
+    array?:
+      | {
+          text?: string | null
+          array?:
+            | {
+                text?: string | null
+                id?: string | null
+              }[]
+            | null
+          id?: string | null
+        }[]
+      | null
+  }
   textarea?: string | null
   anotherText: string
   nestedTab: {
@@ -869,6 +1248,10 @@ export interface TabsField {
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "uploads".
+ */
 export interface Upload {
   id: string
   text?: string | null
@@ -886,7 +1269,13 @@ export interface Upload {
   filesize?: number | null
   width?: number | null
   height?: number | null
+  focalX?: number | null
+  focalY?: number | null
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "uploads2".
+ */
 export interface Uploads2 {
   id: string
   text?: string | null
@@ -899,7 +1288,13 @@ export interface Uploads2 {
   filesize?: number | null
   width?: number | null
   height?: number | null
+  focalX?: number | null
+  focalY?: number | null
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "uploads3".
+ */
 export interface Uploads3 {
   id: string
   media?: string | Uploads3 | null
@@ -916,7 +1311,13 @@ export interface Uploads3 {
   filesize?: number | null
   width?: number | null
   height?: number | null
+  focalX?: number | null
+  focalY?: number | null
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-preferences".
+ */
 export interface PayloadPreference {
   id: string
   user: {
@@ -936,12 +1337,69 @@ export interface PayloadPreference {
   updatedAt: string
   createdAt: string
 }
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-migrations".
+ */
 export interface PayloadMigration {
   id: string
   name?: string | null
   batch?: number | null
   updatedAt: string
   createdAt: string
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tabsWithRichText".
+ */
+export interface TabsWithRichText {
+  id: string
+  tab1: {
+    rt1?: {
+      root: {
+        type: string
+        children: {
+          type: string
+          version: number
+          [k: string]: unknown
+        }[]
+        direction: ('ltr' | 'rtl') | null
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+        indent: number
+        version: number
+      }
+      [k: string]: unknown
+    } | null
+  }
+  tab2: {
+    rt2?: {
+      root: {
+        type: string
+        children: {
+          type: string
+          version: number
+          [k: string]: unknown
+        }[]
+        direction: ('ltr' | 'rtl') | null
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | ''
+        indent: number
+        version: number
+      }
+      [k: string]: unknown
+    } | null
+  }
+  updatedAt?: string | null
+  createdAt?: string | null
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LexicalBlocksRadioButtonsBlock".
+ */
+export interface LexicalBlocksRadioButtonsBlock {
+  radioButtons?: ('option1' | 'option2' | 'option3') | null
+  id?: string | null
+  blockName?: string | null
+  blockType: 'radioButtons'
 }
 
 declare module 'payload' {

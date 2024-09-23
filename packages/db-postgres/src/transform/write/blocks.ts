@@ -25,6 +25,7 @@ type Args = {
   selects: {
     [tableName: string]: Record<string, unknown>[]
   }
+  texts: Record<string, unknown>[]
 }
 export const transformBlocks = ({
   adapter,
@@ -39,6 +40,7 @@ export const transformBlocks = ({
   relationships,
   relationshipsToDelete,
   selects,
+  texts,
 }: Args) => {
   data.forEach((blockRow, i) => {
     if (typeof blockRow.blockType !== 'string') return
@@ -59,7 +61,7 @@ export const transformBlocks = ({
 
     if (field.localized && locale) newRow.row._locale = locale
 
-    const blockTableName = `${baseTableName}_blocks_${blockType}`
+    const blockTableName = adapter.tableNameMap.get(`${baseTableName}_blocks_${blockType}`)
 
     const hasUUID = adapter.tables[blockTableName]._uuid
 
@@ -91,6 +93,7 @@ export const transformBlocks = ({
       relationshipsToDelete,
       row: newRow.row,
       selects,
+      texts,
     })
 
     blocks[blockType].push(newRow)

@@ -142,6 +142,21 @@ const TabsFields: CollectionConfig = {
               type: 'text',
               defaultValue: namedTabDefaultValue,
             },
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'arrayInRow',
+                  type: 'array',
+                  fields: [
+                    {
+                      name: 'textInArrayInRow',
+                      type: 'text',
+                    },
+                  ],
+                },
+              ],
+            },
           ],
         },
         {
@@ -229,6 +244,32 @@ const TabsFields: CollectionConfig = {
             {
               name: 'afterRead',
               type: 'checkbox',
+            },
+          ],
+        },
+        {
+          name: 'camelCaseTab',
+          fields: [
+            {
+              name: 'array',
+              type: 'array',
+              fields: [
+                {
+                  type: 'text',
+                  name: 'text',
+                  localized: true,
+                },
+                {
+                  type: 'array',
+                  name: 'array',
+                  fields: [
+                    {
+                      type: 'text',
+                      name: 'text',
+                    },
+                  ],
+                },
+              ],
             },
           ],
         },

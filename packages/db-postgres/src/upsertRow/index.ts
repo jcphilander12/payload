@@ -68,6 +68,7 @@ export const upsertRow = async <T extends TypeWithID>({
 
     const localesToInsert: Record<string, unknown>[] = []
     const relationsToInsert: Record<string, unknown>[] = []
+    const textsToInsert: Record<string, unknown>[] = []
     const numbersToInsert: Record<string, unknown>[] = []
     const blocksToInsert: { [blockType: string]: BlockRowToInsert[] } = {}
     const selectsToInsert: { [selectTableName: string]: Record<string, unknown>[] } = {}
@@ -86,6 +87,14 @@ export const upsertRow = async <T extends TypeWithID>({
       rowToInsert.relationships.forEach((relation) => {
         relation.parent = insertedRow.id
         relationsToInsert.push(relation)
+      })
+    }
+
+    // If there are texts, add parent to each
+    if (rowToInsert.texts.length > 0) {
+      rowToInsert.texts.forEach((textRow) => {
+        textRow.parent = insertedRow.id
+        textsToInsert.push(textRow)
       })
     }
 
@@ -129,7 +138,7 @@ export const upsertRow = async <T extends TypeWithID>({
     // //////////////////////////////////
 
     if (localesToInsert.length > 0) {
-      const localeTable = adapter.tables[`${tableName}_locales`]
+      const localeTable = adapter.tables[`${tableName}${adapter.localesSuffix}`]
 
       if (operation === 'update') {
         await db.delete(localeTable).where(eq(localeTable._parentID, insertedRow.id))
@@ -142,7 +151,7 @@ export const upsertRow = async <T extends TypeWithID>({
     // INSERT RELATIONSHIPS
     // //////////////////////////////////
 
-    const relationshipsTableName = `${tableName}_rels`
+    const relationshipsTableName = `${tableName}${adapter.relationshipsSuffix}`
 
     if (operation === 'update') {
       await deleteExistingRowsByPath({
@@ -159,6 +168,29 @@ export const upsertRow = async <T extends TypeWithID>({
 
     if (relationsToInsert.length > 0) {
       await db.insert(adapter.tables[relationshipsTableName]).values(relationsToInsert)
+    }
+
+    // //////////////////////////////////
+    // INSERT hasMany TEXTS
+    // //////////////////////////////////
+
+    const textsTableName = `${tableName}_texts`
+
+    if (operation === 'update') {
+      await deleteExistingRowsByPath({
+        adapter,
+        db,
+        localeColumnName: 'locale',
+        parentColumnName: 'parent',
+        parentID: insertedRow.id,
+        pathColumnName: 'path',
+        rows: textsToInsert,
+        tableName: textsTableName,
+      })
+    }
+
+    if (textsToInsert.length > 0) {
+      await db.insert(adapter.tables[textsTableName]).values(textsToInsert).returning()
     }
 
     // //////////////////////////////////
@@ -192,15 +224,16 @@ export const upsertRow = async <T extends TypeWithID>({
 
     if (operation === 'update') {
       for (const blockName of rowToInsert.blocksToDelete) {
-        const blockTableName = `${tableName}_blocks_${blockName}`
+        const blockTableName = adapter.tableNameMap.get(`${tableName}_blocks_${blockName}`)
         const blockTable = adapter.tables[blockTableName]
         await db.delete(blockTable).where(eq(blockTable._parentID, insertedRow.id))
       }
     }
 
     for (const [blockName, blockRows] of Object.entries(blocksToInsert)) {
+      const blockTableName = adapter.tableNameMap.get(`${tableName}_blocks_${blockName}`)
       insertedBlockRows[blockName] = await db
-        .insert(adapter.tables[`${tableName}_blocks_${blockName}`])
+        .insert(adapter.tables[blockTableName])
         .values(blockRows.map(({ row }) => row))
         .returning()
 
@@ -227,7 +260,7 @@ export const upsertRow = async <T extends TypeWithID>({
 
       if (blockLocaleRowsToInsert.length > 0) {
         await db
-          .insert(adapter.tables[`${tableName}_blocks_${blockName}_locales`])
+          .insert(adapter.tables[`${blockTableName}${adapter.localesSuffix}`])
           .values(blockLocaleRowsToInsert)
           .returning()
       }

@@ -41,4 +41,5 @@ export type RowToInsert = {
   selects: {
     [tableName: string]: Record<string, unknown>[]
   }
+  texts: Record<string, unknown>[]
 }

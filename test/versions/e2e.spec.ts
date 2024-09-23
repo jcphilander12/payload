@@ -19,7 +19,6 @@
  *    - tabs
  *    - text
  *    - richtext
- *  - restore version
  *  - specify locales to show
  */
 
@@ -29,12 +28,14 @@ import { expect, test } from '@playwright/test'
 
 import payload from '../../packages/payload/src'
 import wait from '../../packages/payload/src/utilities/wait'
+import { POLL_TOPASS_TIMEOUT } from '../../playwright.config'
 import { globalSlug } from '../admin/slugs'
 import {
   changeLocale,
   exactText,
   findTableCell,
   initPageConsoleErrorCatch,
+  saveDocAndAssert,
   selectTableRow,
 } from '../helpers'
 import { AdminUrlUtil } from '../helpers/adminUrlUtil'
@@ -44,10 +45,12 @@ import { titleToDelete } from './shared'
 import {
   autoSaveGlobalSlug,
   autosaveCollectionSlug,
+  customIDSlug,
   disablePublishGlobalSlug,
   disablePublishSlug,
   draftCollectionSlug,
   draftGlobalSlug,
+  postCollectionSlug,
 } from './slugs'
 
 const { beforeAll, beforeEach, describe } = test
@@ -58,12 +61,19 @@ describe('versions', () => {
   let serverURL: string
   let autosaveURL: AdminUrlUtil
   let disablePublishURL: AdminUrlUtil
+  let customIDURL: AdminUrlUtil
+  let postURL: AdminUrlUtil
 
   beforeAll(async ({ browser }) => {
     const config = await initPayloadE2E(__dirname)
     serverURL = config.serverURL
     const context = await browser.newContext()
     page = await context.newPage()
+    url = new AdminUrlUtil(serverURL, draftCollectionSlug)
+    autosaveURL = new AdminUrlUtil(serverURL, autosaveCollectionSlug)
+    disablePublishURL = new AdminUrlUtil(serverURL, disablePublishSlug)
+    customIDURL = new AdminUrlUtil(serverURL, customIDSlug)
+    postURL = new AdminUrlUtil(serverURL, postCollectionSlug)
 
     initPageConsoleErrorCatch(page)
   })
@@ -73,12 +83,6 @@ describe('versions', () => {
   })
 
   describe('draft collections', () => {
-    beforeAll(() => {
-      url = new AdminUrlUtil(serverURL, draftCollectionSlug)
-      autosaveURL = new AdminUrlUtil(serverURL, autosaveCollectionSlug)
-      disablePublishURL = new AdminUrlUtil(serverURL, disablePublishSlug)
-    })
-
     // This test has to run before bulk updates that will rename the title
     test('should delete', async () => {
       await page.goto(url.list)
@@ -114,6 +118,38 @@ describe('versions', () => {
       )
 
       await expect(await findTableCell(page, '_status', 'Draft Title')).toContainText('Published')
+    })
+
+    test('bulk publish with autosave documents', async () => {
+      const title = 'autosave title'
+      const description = 'autosave description'
+      await page.goto(autosaveURL.create)
+
+      // fill the fields
+      await page.locator('#field-title').fill(title)
+      await page.locator('#field-description').fill(description)
+
+      // wait for autosave
+      await wait(2000)
+
+      // go to list
+      await page.goto(autosaveURL.list)
+
+      // expect the status to be draft
+      await expect(await findTableCell(page, '_status', title)).toContainText('Draft')
+
+      // select the row
+      // await page.locator('.row-1 .select-row__checkbox').click()
+      await selectTableRow(page, title)
+
+      // click the publish many
+      await page.locator('.publish-many__toggle').click()
+
+      // confirm the dialog
+      await page.locator('#confirm-publish').click()
+
+      // expect the status to be published
+      await expect(await findTableCell(page, '_status', title)).toContainText('Published')
     })
 
     test('bulk update - should unpublish many', async () => {
@@ -229,6 +265,53 @@ describe('versions', () => {
       expect(page.url()).toMatch(/\/versions$/)
     })
 
+    test('should show collection versions view level action in collection versions view', async () => {
+      await page.goto(url.list)
+      await page.locator('tbody tr .cell-title a').first().click()
+      await page.goto(`${page.url()}/versions`)
+      await expect(page.locator('.app-header .collection-versions-button')).toHaveCount(1)
+    })
+
+    test('should restore version with correct data', async () => {
+      await page.goto(url.create)
+      await page.waitForURL(url.create)
+
+      // publish a doc
+      await page.locator('#field-title').fill('v1')
+      await page.locator('#field-description').fill('hello')
+      await saveDocAndAssert(page)
+
+      // save a draft
+      await page.locator('#field-title').fill('v2')
+      await saveDocAndAssert(page, '#action-save-draft')
+
+      // go to versions list view
+      const savedDocURL = page.url()
+      await page.goto(`${savedDocURL}/versions`)
+      await page.waitForURL(`${savedDocURL}/versions`)
+
+      // select the first version (row 2)
+      const row2 = page.locator('tbody .row-2')
+      const versionID = await row2.locator('.cell-id').textContent()
+      await page.goto(`${savedDocURL}/versions/${versionID}`)
+      await page.waitForURL(`${savedDocURL}/versions/${versionID}`)
+
+      // restore doc
+      await page.locator('.pill.restore-version').click()
+      await page.locator('button:has-text("Confirm")').click()
+      await expect.poll(() => page.url(), { timeout: POLL_TOPASS_TIMEOUT }).not.toContain(versionID)
+
+      await expect(page.locator('#field-title')).toHaveValue('v1')
+    })
+
+    test('should show global versions view level action in globals versions view', async () => {
+      const global = new AdminUrlUtil(serverURL, draftGlobalSlug)
+      await page.goto(`${global.global(draftGlobalSlug)}/versions`)
+      await expect(page.locator('.app-header .global-versions-button')).toHaveCount(1)
+    })
+
+    // TODO: Check versions/:version-id view for collections / globals
+
     test('global - has versions tab', async () => {
       const global = new AdminUrlUtil(serverURL, draftGlobalSlug)
       await page.goto(global.global(draftGlobalSlug))
@@ -276,18 +359,18 @@ describe('versions', () => {
       await page.goto(autosaveURL.create)
       await page.locator('#field-title').fill(title)
       await page.locator('#field-description').fill(description)
-      await wait(500) // wait for autosave
+      await wait(1000) // wait for autosave
 
       await changeLocale(page, spanishLocale)
       await page.locator('#field-title').fill(spanishTitle)
-      await wait(500) // wait for autosave
+      await wait(1000) // wait for autosave
 
       await changeLocale(page, locale)
       await page.locator('#field-description').fill(newDescription)
-      await wait(500) // wait for autosave
+      await wait(1000) // wait for autosave
 
       await changeLocale(page, spanishLocale)
-      await wait(500) // wait for autosave
+      await wait(1000) // wait for autosave
 
       await page.reload()
       await expect(page.locator('#field-title')).toHaveValue(spanishTitle)
@@ -350,6 +433,19 @@ describe('versions', () => {
       await expect(page.locator('#field-description')).toHaveValue('first post description')
     })
 
+    test('should save versions with custom IDs', async () => {
+      await page.goto(customIDURL.create)
+      await page.locator('#field-id').fill('custom')
+      await page.locator('#field-title').fill('title')
+      await page.locator('#action-save').click()
+
+      await page.goto(customIDURL.list)
+      await page.locator('tbody tr .cell-id a').click()
+
+      await expect(page.locator('div.id-label')).toHaveText(/custom/)
+      await expect(page.locator('#field-title')).toHaveValue('title')
+    })
+
     test('should hide publish when access control prevents updating on globals', async () => {
       const url = new AdminUrlUtil(serverURL, disablePublishGlobalSlug)
       await page.goto(url.global(disablePublishGlobalSlug))
@@ -376,6 +472,26 @@ describe('versions', () => {
       await page.goto(disablePublishURL.edit(String(publishedDoc.id)))
 
       await expect(page.locator('#action-save')).not.toBeAttached()
+    })
+
+    test('should show documents title in relationship even if draft document', async () => {
+      await payload.create({
+        collection: autosaveCollectionSlug,
+        data: {
+          title: 'some title',
+        },
+        draft: true,
+      })
+
+      await page.goto(postURL.create)
+
+      const field = page.locator('#field-relationToAutosaves')
+
+      await field.click()
+
+      await expect(page.locator('.rs__option')).toHaveCount(1)
+
+      await expect(page.locator('.rs__option')).toHaveText('some title')
     })
   })
 })

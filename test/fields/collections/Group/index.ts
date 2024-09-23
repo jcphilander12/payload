@@ -59,6 +59,24 @@ const GroupFields: CollectionConfig = {
       ],
     },
     {
+      name: 'arrayOfGroups',
+      type: 'array',
+      defaultValue: [
+        {
+          groupItem: {
+            text: 'Hello world',
+          },
+        },
+      ],
+      fields: [
+        {
+          name: 'groupItem',
+          type: 'group',
+          fields: [{ name: 'text', type: 'text' }],
+        },
+      ],
+    },
+    {
       name: 'potentiallyEmptyGroup',
       type: 'group',
       fields: [
@@ -111,7 +129,6 @@ const GroupFields: CollectionConfig = {
         },
       ],
     },
-
     {
       type: 'tabs',
       tabs: [
@@ -159,6 +176,50 @@ const GroupFields: CollectionConfig = {
                       ],
                     },
                   ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'camelCaseGroup',
+      type: 'group',
+      fields: [
+        {
+          name: 'array',
+          type: 'array',
+          fields: [
+            {
+              type: 'text',
+              name: 'text',
+              localized: true,
+            },
+            {
+              type: 'array',
+              name: 'array',
+              fields: [
+                {
+                  type: 'text',
+                  name: 'text',
+                },
+              ],
+            },
+          ],
+        },
+        {
+          name: 'nesGroup',
+          type: 'group',
+          fields: [
+            {
+              type: 'array',
+              name: 'arr',
+              fields: [
+                {
+                  type: 'text',
+                  name: 'text',
+                  localized: true,
                 },
               ],
             },

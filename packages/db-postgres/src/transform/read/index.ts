@@ -18,11 +18,17 @@ type TransformArgs = {
 // into the shape Payload expects based on field schema
 export const transform = <T extends TypeWithID>({ config, data, fields }: TransformArgs): T => {
   let relationships: Record<string, Record<string, unknown>[]> = {}
+  let texts: Record<string, Record<string, unknown>[]> = {}
   let numbers: Record<string, Record<string, unknown>[]> = {}
 
   if ('_rels' in data) {
     relationships = createPathMap(data._rels)
     delete data._rels
+  }
+
+  if ('_texts' in data) {
+    texts = createPathMap(data._texts)
+    delete data._texts
   }
 
   if ('_numbers' in data) {
@@ -46,6 +52,7 @@ export const transform = <T extends TypeWithID>({ config, data, fields }: Transf
     path: '',
     relationships,
     table: data,
+    texts,
   })
 
   deletions.forEach((deletion) => deletion())

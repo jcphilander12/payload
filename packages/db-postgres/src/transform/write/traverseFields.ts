@@ -13,6 +13,7 @@ import { transformBlocks } from './blocks'
 import { transformNumbers } from './numbers'
 import { transformRelationship } from './relationships'
 import { transformSelects } from './selects'
+import { transformTexts } from './texts'
 
 type Args = {
   adapter: PostgresAdapter
@@ -56,6 +57,7 @@ type Args = {
   selects: {
     [tableName: string]: Record<string, unknown>[]
   }
+  texts: Record<string, unknown>[]
 }
 
 export const traverseFields = ({
@@ -78,6 +80,7 @@ export const traverseFields = ({
   relationshipsToDelete,
   row,
   selects,
+  texts,
 }: Args) => {
   fields.forEach((field) => {
     let columnName = ''
@@ -91,7 +94,7 @@ export const traverseFields = ({
     }
 
     if (field.type === 'array') {
-      const arrayTableName = `${parentTableName}_${columnName}`
+      const arrayTableName = adapter.tableNameMap.get(`${parentTableName}_${columnName}`)
 
       if (!arrays[arrayTableName]) arrays[arrayTableName] = []
 
@@ -113,6 +116,7 @@ export const traverseFields = ({
                 relationships,
                 relationshipsToDelete,
                 selects,
+                texts,
               })
 
               arrays[arrayTableName] = arrays[arrayTableName].concat(newRows)
@@ -133,6 +137,7 @@ export const traverseFields = ({
           relationships,
           relationshipsToDelete,
           selects,
+          texts,
         })
 
         arrays[arrayTableName] = arrays[arrayTableName].concat(newRows)
@@ -163,6 +168,7 @@ export const traverseFields = ({
                 relationships,
                 relationshipsToDelete,
                 selects,
+                texts,
               })
             }
           })
@@ -180,6 +186,7 @@ export const traverseFields = ({
           relationships,
           relationshipsToDelete,
           selects,
+          texts,
         })
       }
 
@@ -210,6 +217,7 @@ export const traverseFields = ({
               relationshipsToDelete,
               row,
               selects,
+              texts,
             })
           })
         } else {
@@ -232,6 +240,7 @@ export const traverseFields = ({
             relationshipsToDelete,
             row,
             selects,
+            texts,
           })
         }
       }
@@ -265,6 +274,7 @@ export const traverseFields = ({
                   relationshipsToDelete,
                   row,
                   selects,
+                  texts,
                 })
               })
             } else {
@@ -287,6 +297,7 @@ export const traverseFields = ({
                 relationshipsToDelete,
                 row,
                 selects,
+                texts,
               })
             }
           }
@@ -310,6 +321,7 @@ export const traverseFields = ({
             relationshipsToDelete,
             row,
             selects,
+            texts,
           })
         }
       })
@@ -335,6 +347,7 @@ export const traverseFields = ({
         relationshipsToDelete,
         row,
         selects,
+        texts,
       })
     }
 
@@ -382,6 +395,37 @@ export const traverseFields = ({
       return
     }
 
+    if (field.type === 'text' && field.hasMany) {
+      const textPath = `${path || ''}${field.name}`
+
+      if (field.localized) {
+        if (typeof fieldData === 'object') {
+          Object.entries(fieldData).forEach(([localeKey, localeData]) => {
+            if (Array.isArray(localeData)) {
+              transformTexts({
+                baseRow: {
+                  locale: localeKey,
+                  path: textPath,
+                },
+                data: localeData,
+                texts,
+              })
+            }
+          })
+        }
+      } else if (Array.isArray(fieldData)) {
+        transformTexts({
+          baseRow: {
+            path: textPath,
+          },
+          data: fieldData,
+          texts,
+        })
+      }
+
+      return
+    }
+
     if (field.type === 'number' && field.hasMany) {
       const numberPath = `${path || ''}${field.name}`
 
@@ -414,7 +458,7 @@ export const traverseFields = ({
     }
 
     if (field.type === 'select' && field.hasMany) {
-      const selectTableName = `${parentTableName}_${columnName}`
+      const selectTableName = adapter.tableNameMap.get(`${parentTableName}_${columnName}`)
       if (!selects[selectTableName]) selects[selectTableName] = []
 
       if (field.localized) {

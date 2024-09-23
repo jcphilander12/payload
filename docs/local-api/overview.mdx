@@ -164,6 +164,22 @@ const result = await payload.findByID({
 })
 ```
 
+#### Count
+
+```js
+// Result will be an object with:
+// {
+//   totalDocs: 10, // count of the documents satisfies query
+// }
+const result = await payload.count({
+  collection: 'posts', // required
+  locale: 'en',
+  where: {}, // pass a `where` query here
+  user: dummyUser,
+  overrideAccess: false,
+})
+```
+
 #### Update by ID
 
 ```js
@@ -357,7 +373,7 @@ const result = await payload.unlock({
 
 ```js
 // Returned result will be a boolean representing success or failure
-const result = await payload.verify({
+const result = await payload.verifyEmail({
   collection: 'users', // required
   token: 'afh3o2jf2p3f...', // the token saved on the user as `_verificationToken`
 })

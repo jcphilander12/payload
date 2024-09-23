@@ -27,6 +27,7 @@ const JSONField: React.FC<Props> = (props) => {
       style,
       width,
     } = {},
+    jsonSchema,
     label,
     path: pathFromProps,
     required,
@@ -39,6 +40,7 @@ const JSONField: React.FC<Props> = (props) => {
   const path = pathFromProps || name
   const [stringValue, setStringValue] = useState<string>()
   const [jsonError, setJsonError] = useState<string>()
+  const [hasLoadedValue, setHasLoadedValue] = useState(false)
 
   const memoizedValidate = useCallback(
     (value, options) => {
@@ -53,13 +55,32 @@ const JSONField: React.FC<Props> = (props) => {
     validate: memoizedValidate,
   })
 
+  const handleMount = useCallback(
+    (editor, monaco) => {
+      if (!jsonSchema) return
+
+      const existingSchemas = monaco.languages.json.jsonDefaults.diagnosticsOptions.schemas || []
+      const modelUri = monaco.Uri.parse(jsonSchema.uri)
+
+      const model = monaco.editor.createModel(JSON.stringify(value, null, 2), 'json', modelUri)
+      monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+        enableSchemaRequest: true,
+        schemas: [...existingSchemas, jsonSchema],
+        validate: true,
+      })
+
+      editor.setModel(model)
+    },
+    [value, jsonSchema],
+  )
+
   const handleChange = useCallback(
     (val) => {
-      if (readOnly) return
-      setStringValue(val)
-
       try {
-        setValue(JSON.parse(val.trim() || '{}'))
+        if (readOnly) return
+        setStringValue(val)
+
+        setValue(val ? JSON.parse(val) : '')
         setJsonError(undefined)
       } catch (e) {
         setJsonError(e)
@@ -69,8 +90,18 @@ const JSONField: React.FC<Props> = (props) => {
   )
 
   useEffect(() => {
-    setStringValue(JSON.stringify(value ? value : initialValue, null, 2))
-  }, [initialValue, value])
+    try {
+      const hasValue = value && value.toString().length > 0
+      if (hasLoadedValue) {
+        setStringValue(hasValue ? JSON.stringify(value, null, 2) : '')
+      } else {
+        setStringValue(JSON.stringify(hasValue ? value : initialValue, null, 2))
+        setHasLoadedValue(true)
+      }
+    } catch (e) {
+      setJsonError(e)
+    }
+  }, [initialValue, value, hasLoadedValue])
 
   return (
     <div
@@ -93,6 +124,7 @@ const JSONField: React.FC<Props> = (props) => {
       <CodeEditor
         defaultLanguage="json"
         onChange={handleChange}
+        onMount={handleMount}
         options={editorOptions}
         readOnly={readOnly}
         value={stringValue}

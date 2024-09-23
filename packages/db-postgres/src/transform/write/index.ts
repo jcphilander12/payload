@@ -32,6 +32,7 @@ export const transformForWrite = ({
     relationshipsToDelete: [],
     row: {},
     selects: {},
+    texts: [],
   }
 
   // This function is responsible for building up the
@@ -54,6 +55,7 @@ export const transformForWrite = ({
     relationshipsToDelete: rowToInsert.relationshipsToDelete,
     row: rowToInsert.row,
     selects: rowToInsert.selects,
+    texts: rowToInsert.texts,
   })
 
   return rowToInsert

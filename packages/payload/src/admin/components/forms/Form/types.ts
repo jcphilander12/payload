@@ -20,8 +20,10 @@ export type FormField = {
   condition?: Condition
   disableFormData?: boolean
   errorMessage?: string
+  fieldSchema?: FieldConfig
   initialValue: unknown
   passesCondition?: boolean
+  previousValue?: unknown
   rows?: Row[]
   valid: boolean
   validate?: Validate

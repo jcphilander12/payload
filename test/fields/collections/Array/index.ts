@@ -21,8 +21,13 @@ const ArrayFields: CollectionConfig = {
       fields: [
         {
           name: 'text',
-          required: true,
           type: 'text',
+          required: true,
+        },
+        {
+          name: 'localizedText',
+          type: 'text',
+          localized: true,
         },
         {
           name: 'subArray',
@@ -149,6 +154,38 @@ const ArrayFields: CollectionConfig = {
       ],
       minRows: 2,
       type: 'array',
+    },
+    {
+      name: 'disableSort',
+      defaultValue: arrayDefaultValue,
+      admin: {
+        isSortable: false,
+      },
+      fields: [
+        {
+          name: 'text',
+          required: true,
+          type: 'text',
+        },
+      ],
+      type: 'array',
+    },
+    {
+      name: 'nestedArrayLocalized',
+      type: 'array',
+      fields: [
+        {
+          type: 'array',
+          name: 'array',
+          fields: [
+            {
+              name: 'text',
+              type: 'text',
+              localized: true,
+            },
+          ],
+        },
+      ],
     },
   ],
   slug: arrayFieldsSlug,

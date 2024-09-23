@@ -25,6 +25,7 @@ type Args = {
   selects: {
     [tableName: string]: Record<string, unknown>[]
   }
+  texts: Record<string, unknown>[]
 }
 
 export const transformArray = ({
@@ -41,8 +42,10 @@ export const transformArray = ({
   relationships,
   relationshipsToDelete,
   selects,
+  texts,
 }: Args) => {
   const newRows: ArrayRowToInsert[] = []
+
   const hasUUID = adapter.tables[arrayTableName]._uuid
 
   if (isArrayOfRows(data)) {
@@ -93,6 +96,7 @@ export const transformArray = ({
         relationshipsToDelete,
         row: newRow.row,
         selects,
+        texts,
       })
 
       newRows.push(newRow)

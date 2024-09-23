@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test'
 
 import { expect } from '@playwright/test'
+import shelljs from 'shelljs'
 
 import wait from '../packages/payload/src/utilities/wait'
 import { devUser } from './credentials'
@@ -50,10 +51,18 @@ export async function saveDocHotkeyAndAssert(page: Page): Promise<void> {
   await expect(page.locator('.Toastify')).toContainText('successfully')
 }
 
-export async function saveDocAndAssert(page: Page, selector = '#action-save'): Promise<void> {
+export async function saveDocAndAssert(
+  page: Page,
+  selector = '#action-save',
+  expectation: 'error' | 'success' = 'success',
+): Promise<void> {
   await page.click(selector, { delay: 100 })
-  await expect(page.locator('.Toastify')).toContainText('successfully')
-  expect(page.url()).not.toContain('create')
+  if (expectation === 'success') {
+    await expect(page.locator('.Toastify')).toContainText('successfully')
+    expect(page.url()).not.toContain('create')
+  } else {
+    await expect(page.locator('.Toastify .Toastify__toast--error')).toBeVisible()
+  }
 }
 
 export async function openNav(page: Page): Promise<void> {
@@ -78,7 +87,7 @@ export async function openDocControls(page: Page): Promise<void> {
 
 export async function changeLocale(page: Page, newLocale: string) {
   await page.locator('.localizer >> button').first().click()
-  await page.locator(`.localizer >> a:has-text("${newLocale}")`).click()
+  await page.locator(`.localizer >> a[href="/?locale=${newLocale}"]`).click()
   expect(page.url()).toContain(`locale=${newLocale}`)
 }
 
@@ -98,6 +107,13 @@ export const selectTableRow = async (page: Page, title: string): Promise<void> =
   const selector = `tbody tr:has-text("${title}") .select-row__checkbox input[type=checkbox]`
   await page.locator(selector).check()
   expect(await page.locator(selector).isChecked()).toBe(true)
+}
+
+export async function navigateToListCellLink(page: Page, selector = '.cell-id') {
+  const cellLink = page.locator(`${selector} a`).first()
+  const linkURL = await cellLink.getAttribute('href')
+  await cellLink.click()
+  await page.waitForURL(`**${linkURL}`)
 }
 
 export const findTableCell = async (
@@ -132,4 +148,22 @@ export function initPageConsoleErrorCatch(page: Page) {
       throw new Error(`Browser console error: ${msg.text()}`)
     }
   })
+}
+
+export function describeIfInCIOrHasLocalstack(): jest.Describe {
+  if (process.env.CI) {
+    return describe
+  }
+
+  // Check that localstack is running
+  const { code } = shelljs.exec(`docker ps | grep localstack`)
+
+  if (code !== 0) {
+    console.warn('Localstack is not running. Skipping test suite.')
+    return describe.skip
+  }
+
+  console.log('Localstack is running. Running test suite.')
+
+  return describe
 }

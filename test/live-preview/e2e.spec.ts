@@ -5,7 +5,14 @@ import { expect, test } from '@playwright/test'
 import { exactText, initPageConsoleErrorCatch, saveDocAndAssert } from '../helpers'
 import { AdminUrlUtil } from '../helpers/adminUrlUtil'
 import { initPayloadE2E } from '../helpers/configHelpers'
-import { mobileBreakpoint } from './shared'
+import {
+  ensureDeviceIsCentered,
+  ensureDeviceIsLeftAligned,
+  goToCollectionLivePreview,
+  selectLivePreviewBreakpoint,
+  selectLivePreviewZoom,
+} from './helpers'
+import { desktopBreakpoint, mobileBreakpoint } from './shared'
 import { startLivePreviewDemo } from './startLivePreviewDemo'
 
 const { beforeAll, describe } = test
@@ -79,6 +86,16 @@ describe('Live Preview', () => {
     await expect(field).toBeVisible()
     await field.fill('Title 1')
     await saveDocAndAssert(page)
+  })
+
+  test('collection - should show live-preview view level action in live-preview view', async () => {
+    await goToCollectionPreview(page)
+    await expect(page.locator('.app-header .collection-live-preview-button')).toHaveCount(1)
+  })
+
+  test('global - should show live-preview view level action in live-preview view', async () => {
+    await goToGlobalPreview(page, 'footer')
+    await expect(page.locator('.app-header .global-live-preview-button')).toHaveCount(1)
   })
 
   test('global - has tab', async () => {
@@ -176,11 +193,11 @@ describe('Live Preview', () => {
       .click()
 
     // Make sure the value has been set
-    expect(breakpointSelector).toContainText(mobileBreakpoint.label)
+    await expect(breakpointSelector).toContainText(mobileBreakpoint.label)
     const option = page.locator(
       '.live-preview-toolbar-controls__breakpoint button.popup-button-list__button--selected',
     )
-    expect(option).toHaveText(mobileBreakpoint.label)
+    await expect(option).toHaveText(mobileBreakpoint.label)
 
     // Measure the size of the iframe against the specified breakpoint
     const iframe = page.locator('iframe')
@@ -205,5 +222,35 @@ describe('Live Preview', () => {
     const heightInputValue = await heightInput.getAttribute('value')
     const height = parseInt(heightInputValue)
     expect(height).toBe(mobileBreakpoint.height)
+  })
+
+  test('device — centers device when smaller than frame despite zoom', async () => {
+    await goToCollectionLivePreview(page, url)
+    await selectLivePreviewBreakpoint(page, mobileBreakpoint.label)
+    await ensureDeviceIsCentered(page)
+    await selectLivePreviewZoom(page, '75%')
+    await ensureDeviceIsCentered(page)
+    await selectLivePreviewZoom(page, '50%')
+    await ensureDeviceIsCentered(page)
+    await selectLivePreviewZoom(page, '125%')
+    await ensureDeviceIsCentered(page)
+    await selectLivePreviewZoom(page, '200%')
+    await ensureDeviceIsCentered(page)
+    expect(true).toBeTruthy()
+  })
+
+  test('device — left-aligns device when larger than frame despite zoom', async () => {
+    await goToCollectionLivePreview(page, url)
+    await selectLivePreviewBreakpoint(page, desktopBreakpoint.label)
+    await ensureDeviceIsLeftAligned(page)
+    await selectLivePreviewZoom(page, '75%')
+    await ensureDeviceIsLeftAligned(page)
+    await selectLivePreviewZoom(page, '50%')
+    await ensureDeviceIsLeftAligned(page)
+    await selectLivePreviewZoom(page, '125%')
+    await ensureDeviceIsLeftAligned(page)
+    await selectLivePreviewZoom(page, '200%')
+    await ensureDeviceIsLeftAligned(page)
+    expect(true).toBeTruthy()
   })
 })

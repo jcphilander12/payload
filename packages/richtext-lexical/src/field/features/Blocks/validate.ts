@@ -24,11 +24,17 @@ export const blockValidationHOC = (
     // Sanitize block's fields here. This is done here and not in the feature, because the payload config is available here
     const validRelationships = payloadConfig.collections.map((c) => c.slug) || []
     blocks.forEach((block) => {
-      block.fields = sanitizeFields({
-        config: payloadConfig,
-        fields: block.fields,
-        validRelationships,
-      })
+      // @ts-expect-error
+      if (!block._sanitized) {
+        block.fields = sanitizeFields({
+          config: payloadConfig,
+          fields: block.fields,
+          requireFieldLevelRichTextEditor: true,
+          validRelationships,
+        })
+        // @ts-expect-error
+        block._sanitized = true
+      }
     })
 
     // find block
@@ -44,9 +50,11 @@ export const blockValidationHOC = (
         const fieldValue = 'name' in field ? node.fields[field.name] : null
 
         const passesCondition = field.admin?.condition
-          ? field.admin.condition(fieldValue, node.fields, {
-              user: req?.user,
-            })
+          ? Boolean(
+              field.admin.condition(fieldValue, node.fields, {
+                user: req?.user,
+              }),
+            )
           : true
         if (!passesCondition) {
           continue // Fixes https://github.com/payloadcms/payload/issues/4000

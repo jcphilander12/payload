@@ -1,12 +1,3 @@
-/** @module @lexical/link */
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
-
 import type { BaseSelection } from 'lexical'
 
 import { addClassNamesToElement, isHTMLAnchorElement } from '@lexical/utils'
@@ -31,16 +22,20 @@ import {
 
 import type { LinkPayload } from '../plugins/floatingLinkEditor/types'
 
+import { $isAutoLinkNode } from './AutoLinkNode'
+
 export type LinkFields = {
   // unknown, custom fields:
   [key: string]: unknown
   doc: {
     relationTo: string
-    value: {
-      // Actual doc data, populated in afterRead hook
-      [key: string]: unknown
-      id: string
-    }
+    value:
+      | {
+          // Actual doc data, populated in afterRead hook
+          [key: string]: unknown
+          id: string
+        }
+      | string
   } | null
   linkType: 'custom' | 'internal'
   newTab: boolean
@@ -97,6 +92,15 @@ export class LinkNode extends ElementNode {
   }
 
   static importJSON(serializedNode: SerializedLinkNode): LinkNode {
+    if (
+      serializedNode.version === 1 &&
+      typeof serializedNode.fields?.doc?.value === 'object' &&
+      serializedNode.fields?.doc?.value?.id
+    ) {
+      serializedNode.fields.doc.value = serializedNode.fields.doc.value.id
+      serializedNode.version = 2
+    }
+
     const node = $createLinkNode({
       fields: serializedNode.fields,
     })
@@ -138,9 +142,9 @@ export class LinkNode extends ElementNode {
   exportJSON(): SerializedLinkNode {
     return {
       ...super.exportJSON(),
-      fields: this.getFields(),
       type: this.getType(),
-      version: 1,
+      fields: this.getFields(),
+      version: 2,
     }
   }
 

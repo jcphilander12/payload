@@ -15,6 +15,7 @@ import type { RichTextAdapter } from '../../admin/components/forms/field-types/R
 import type { User } from '../../auth'
 import type { SanitizedCollectionConfig, TypeWithID } from '../../collections/config/types'
 import type { SanitizedConfig } from '../../config/types'
+import type { DBIdentifierName } from '../../database/types'
 import type { PayloadRequest, RequestContext } from '../../express/types'
 import type { SanitizedGlobalConfig } from '../../globals/config/types'
 import type { Payload } from '../../payload'
@@ -38,8 +39,9 @@ export type FieldHookArgs<T extends TypeWithID = any, P = any, S = any> = {
   originalDoc?: T
   /** The document before changes were applied, only in `afterChange` hooks. */
   previousDoc?: T
-  /** The sibling data from the previous document in `afterChange` hook. */
+  /** The sibling data of the document before changes being applied, only in `beforeChange` and `afterChange` hook. */
   previousSiblingDoc?: T
+  /** The previous value of the field, before changes, only in `beforeChange` and `afterChange` hooks. */
   previousValue?: P
   /** The Express request object. It is mocked for Local API operations. */
   req: PayloadRequest
@@ -77,7 +79,11 @@ export type FieldAccess<T extends TypeWithID = any, P = any, U = any> = (args: {
 export type Condition<T extends TypeWithID = any, P = any> = (
   data: Partial<T>,
   siblingData: Partial<P>,
-  { user }: { user: User },
+  {
+    user,
+  }: {
+    user: User
+  },
 ) => boolean
 
 export type FilterOptionsProps<T = any> = {
@@ -89,7 +95,7 @@ export type FilterOptionsProps<T = any> = {
 }
 
 export type FilterOptions<T = any> =
-  | ((options: FilterOptionsProps<T>) => Promise<Where> | Where)
+  | ((options: FilterOptionsProps<T>) => Promise<Where | boolean> | Where | boolean)
   | Where
   | null
 
@@ -107,6 +113,8 @@ type Admin = {
   condition?: Condition
   description?: Description
   disableBulkEdit?: boolean
+  disableListColumn?: boolean
+  disableListFilter?: boolean
   disabled?: boolean
   hidden?: boolean
   position?: 'sidebar'
@@ -120,12 +128,13 @@ export type Labels = {
   singular: Record<string, string> | string
 }
 
-export type ValidateOptions<TData, TSiblingData, TFieldConfig> = {
+export type ValidateOptions<TData, TSiblingData, TFieldConfig, TValue> = {
   config: SanitizedConfig
   data: Partial<TData>
   id?: number | string
   operation?: Operation
   payload?: Payload
+  previousValue?: TValue
   req?: PayloadRequest
   siblingData: Partial<TSiblingData>
   t: TFunction
@@ -135,7 +144,7 @@ export type ValidateOptions<TData, TSiblingData, TFieldConfig> = {
 // TODO: Having TFieldConfig as any breaks all type checking / auto-completions for the base ValidateOptions properties.
 export type Validate<TValue = any, TData = any, TSiblingData = any, TFieldConfig = any> = (
   value: TValue,
-  options: ValidateOptions<TData, TSiblingData, TFieldConfig>,
+  options: ValidateOptions<TData, TSiblingData, TFieldConfig, TValue>,
 ) => Promise<string | true> | string | true
 
 export type OptionObject = {
@@ -226,7 +235,24 @@ export type TextField = FieldBase & {
   maxLength?: number
   minLength?: number
   type: 'text'
-}
+} & (
+    | {
+        /** Makes this field an ordered array of strings instead of just a single string. */
+        hasMany: true
+        /** Maximum number of strings in the strings array, if `hasMany` is set to true. */
+        maxRows?: number
+        /** Minimum number of strings in the strings array, if `hasMany` is set to true. */
+        minRows?: number
+      }
+    | {
+        /** Makes this field an ordered array of strings instead of just a single string. */
+        hasMany?: false | undefined
+        /** Maximum number of strings in the strings array, if `hasMany` is set to true. */
+        maxRows?: undefined
+        /** Minimum number of strings in the strings array, if `hasMany` is set to true. */
+        minRows?: undefined
+      }
+  )
 
 export type EmailField = FieldBase & {
   admin?: Admin & {
@@ -364,6 +390,7 @@ export type UIField = {
     }
     condition?: Condition
     disableBulkEdit?: boolean
+    disableListColumn?: boolean
     position?: string
     width?: string
   }
@@ -381,6 +408,7 @@ export type UploadField = FieldBase & {
       Label?: React.ComponentType<LabelProps>
     }
   }
+  displayPreview?: boolean
   filterOptions?: FilterOptions
   maxDepth?: number
   relationTo: string
@@ -413,6 +441,7 @@ type JSONAdmin = Admin & {
 
 export type JSONField = Omit<FieldBase, 'admin'> & {
   admin?: JSONAdmin
+  jsonSchema?: Record<string, unknown>
   type: 'json'
 }
 
@@ -425,6 +454,14 @@ export type SelectField = FieldBase & {
     isClearable?: boolean
     isSortable?: boolean
   }
+  /**
+   * Customize the SQL table name
+   */
+  dbName?: DBIdentifierName
+  /**
+   * Customize the DB enum name
+   */
+  enumName?: DBIdentifierName
   hasMany?: boolean
   options: Option[]
   type: 'select'
@@ -474,7 +511,9 @@ type RelationshipAdmin = Admin & {
 }
 export type PolymorphicRelationshipField = SharedRelationshipProperties & {
   admin?: RelationshipAdmin & {
-    sortOptions?: { [collectionSlug: string]: string }
+    sortOptions?: {
+      [collectionSlug: string]: string
+    }
   }
   relationTo: string[]
 }
@@ -506,8 +545,17 @@ export type RichTextField<
   AdapterProps = any,
   ExtraProperties = {},
 > = FieldBase & {
-  admin?: Admin
+  admin?: Admin & {
+    components?: {
+      Error?: React.ComponentType<ErrorProps>
+      Label?: React.ComponentType<LabelProps>
+    }
+  }
   editor?: RichTextAdapter<Value, AdapterProps, AdapterProps>
+  /**
+   * Sets a maximum population depth for this field, regardless of the remaining depth when this field is reached.
+   */
+  maxDepth?: number
   type: 'richText'
 } & ExtraProperties
 
@@ -517,7 +565,15 @@ export type ArrayField = FieldBase & {
       RowLabel?: RowLabel
     } & Admin['components']
     initCollapsed?: boolean | false
+    /**
+     * Disable drag and drop sorting
+     */
+    isSortable?: boolean
   }
+  /**
+   * Customize the SQL table name
+   */
+  dbName?: DBIdentifierName
   fields: Field[]
   /** Customize generated GraphQL and Typescript schema names.
    * By default it is bound to the collection.
@@ -540,11 +596,25 @@ export type RadioField = FieldBase & {
     }
     layout?: 'horizontal' | 'vertical'
   }
+  /**
+   * Customize the SQL table name
+   */
+  dbName?: DBIdentifierName
+  /**
+   * Customize the DB enum name
+   */
+  enumName?: DBIdentifierName
   options: Option[]
   type: 'radio'
 }
 
 export type Block = {
+  /** Extension point to add your custom data. */
+  custom?: Record<string, any>
+  /**
+   * Customize the SQL table name
+   */
+  dbName?: DBIdentifierName
   fields: Field[]
   /** @deprecated - please migrate to the interfaceName property instead. */
   graphQL?: {
@@ -566,6 +636,10 @@ export type Block = {
 export type BlockField = FieldBase & {
   admin?: Admin & {
     initCollapsed?: boolean | false
+    /**
+     * Disable drag and drop sorting
+     */
+    isSortable?: boolean
   }
   blocks: Block[]
   defaultValue?: unknown
@@ -671,6 +745,10 @@ export function fieldIsArrayType(field: Field): field is ArrayField {
 
 export function fieldIsBlockType(field: Field): field is BlockField {
   return field.type === 'blocks'
+}
+
+export function fieldIsGroupType(field: Field): field is GroupField {
+  return field.type === 'group'
 }
 
 export function optionIsObject(option: Option): option is OptionObject {

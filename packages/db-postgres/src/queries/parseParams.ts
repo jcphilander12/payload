@@ -63,11 +63,7 @@ export async function parseParams({
             where: condition,
           })
           if (builtConditions.length > 0) {
-            if (result) {
-              result = operatorMap[conditionOperator](result, ...builtConditions)
-            } else {
-              result = operatorMap[conditionOperator](...builtConditions)
-            }
+            result = operatorMap[conditionOperator](...builtConditions)
           }
         } else {
           // It's a path - and there can be multiple comparisons on a single path.
@@ -75,8 +71,9 @@ export async function parseParams({
           // So we need to loop on keys again here to handle each operator independently
           const pathOperators = where[relationOrPath]
           if (typeof pathOperators === 'object') {
-            for (const operator of Object.keys(pathOperators)) {
+            for (let operator of Object.keys(pathOperators)) {
               if (validOperators.includes(operator as Operator)) {
+                const val = where[relationOrPath][operator]
                 const {
                   columnName,
                   constraints: queryConstraints,
@@ -95,9 +92,8 @@ export async function parseParams({
                   pathSegments: relationOrPath.replace(/__/g, '.').split('.'),
                   selectFields,
                   tableName,
+                  value: val,
                 })
-
-                const val = where[relationOrPath][operator]
 
                 queryConstraints.forEach(({ columnName: col, table: constraintTable, value }) => {
                   if (typeof value === 'string' && value.indexOf('%') > -1) {
@@ -107,7 +103,11 @@ export async function parseParams({
                   }
                 })
 
-                if (['json', 'richText'].includes(field.type) && Array.isArray(pathSegments)) {
+                if (
+                  ['json', 'richText'].includes(field.type) &&
+                  Array.isArray(pathSegments) &&
+                  pathSegments.length > 1
+                ) {
                   const segments = pathSegments.slice(1)
                   segments.unshift(table[columnName].name)
 
@@ -121,12 +121,28 @@ export async function parseParams({
                     })
 
                     constraints.push(sql.raw(jsonQuery))
+                    break
                   }
 
-                  if (field.type === 'json') {
-                    const jsonQuery = convertPathToJSONTraversal(pathSegments)
-                    constraints.push(sql.raw(`${table[columnName].name}${jsonQuery} = '%${val}%'`))
+                  const jsonQuery = convertPathToJSONTraversal(pathSegments)
+                  const operatorKeys = {
+                    contains: { operator: 'ilike', wildcard: '%' },
+                    equals: { operator: '=', wildcard: '' },
+                    exists: { operator: val === true ? 'is not null' : 'is null' },
+                    like: { operator: 'like', wildcard: '%' },
+                    not_equals: { operator: '<>', wildcard: '' },
                   }
+                  let formattedValue = `'${operatorKeys[operator].wildcard}${val}${operatorKeys[operator].wildcard}'`
+
+                  if (operator === 'exists') {
+                    formattedValue = ''
+                  }
+
+                  constraints.push(
+                    sql.raw(
+                      `${table[columnName].name}${jsonQuery} ${operatorKeys[operator].operator} ${formattedValue}`,
+                    ),
+                  )
 
                   break
                 }
@@ -141,6 +157,13 @@ export async function parseParams({
                   break
                 }
 
+                if (
+                  operator === 'like' &&
+                  (field.type === 'number' || table[columnName].columnType === 'PgUUID')
+                ) {
+                  operator = 'equals'
+                }
+
                 if (operator === 'like') {
                   constraints.push(
                     and(...val.split(' ').map((word) => ilike(table[columnName], `%${word}%`))),
@@ -149,6 +172,7 @@ export async function parseParams({
                 }
 
                 const sanitizedQueryValue = sanitizeQueryValue({
+                  adapter,
                   field,
                   operator,
                   relationOrPath,
@@ -178,12 +202,22 @@ export async function parseParams({
                   operator === 'not_in'
                 ) {
                   constraints.push(
-                    sql`${notInArray(table[columnName], queryValue)} OR
+                    sql`(${notInArray(table[columnName], queryValue)} OR
                     ${table[columnName]}
                     IS
-                    NULL`,
+                    NULL)`,
                   )
 
+                  break
+                }
+
+                if (operator === 'equals' && queryValue === null) {
+                  constraints.push(isNull(rawColumn || table[columnName]))
+                  break
+                }
+
+                if (operator === 'not_equals' && queryValue === null) {
+                  constraints.push(isNotNull(rawColumn || table[columnName]))
                   break
                 }
 

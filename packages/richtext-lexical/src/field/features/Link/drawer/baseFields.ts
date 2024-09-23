@@ -1,6 +1,6 @@
+import type { User } from 'payload/auth'
 import type { Config } from 'payload/config'
-import type { Field } from 'payload/types'
-import type { RadioField, TextField } from 'payload/types'
+import type { Field, RadioField, TextField } from 'payload/types'
 
 import { extractTranslations } from 'payload/utilities'
 
@@ -21,6 +21,7 @@ export const getBaseFields = (
   config: Config,
   enabledCollections: false | string[],
   disabledCollections: false | string[],
+  maxDepth?: number,
 ): Field[] => {
   let enabledRelations: string[]
 
@@ -36,19 +37,25 @@ export const getBaseFields = (
       .map(({ slug }) => slug)
   } else {
     enabledRelations = config.collections
-      .filter(({ admin: { enableRichTextLink } }) => enableRichTextLink)
+      .filter(({ admin: { enableRichTextLink, hidden } }) => {
+        if (typeof hidden !== 'function' && hidden) {
+          return false
+        }
+        return enableRichTextLink
+      })
       .map(({ slug }) => slug)
   }
 
   const baseFields = [
     {
       name: 'text',
+      type: 'text',
       label: translations['fields:textToDisplay'],
       required: true,
-      type: 'text',
     },
     {
       name: 'fields',
+      type: 'group',
       admin: {
         style: {
           borderBottom: 0,
@@ -60,6 +67,7 @@ export const getBaseFields = (
       fields: [
         {
           name: 'linkType',
+          type: 'radio',
           admin: {
             description: translations['fields:chooseBetweenCustomTextOrDocument'],
           },
@@ -72,13 +80,12 @@ export const getBaseFields = (
             },
           ],
           required: true,
-          type: 'radio',
         },
         {
           name: 'url',
+          type: 'text',
           label: translations['fields:enterURL'],
           required: true,
-          type: 'text',
           validate: (value: string) => {
             if (value && !validateUrl(value)) {
               return 'Invalid URL'
@@ -86,7 +93,6 @@ export const getBaseFields = (
           },
         },
       ] as Field[],
-      type: 'group',
     },
   ]
 
@@ -107,17 +113,28 @@ export const getBaseFields = (
           return fields?.linkType === 'internal'
         },
       },
+      // when admin.hidden is a function we need to dynamically call hidden with the user to know if the collection should be shown
+      type: 'relationship',
+      filterOptions:
+        !enabledCollections && !disabledCollections
+          ? ({ relationTo, user }) => {
+              const hidden = config.collections.find(({ slug }) => slug === relationTo).admin.hidden
+              if (typeof hidden === 'function' && hidden({ user } as { user: User })) {
+                return false
+              }
+            }
+          : null,
       label: translations['fields:chooseDocumentToLink'],
+      maxDepth,
       relationTo: enabledRelations,
       required: true,
-      type: 'relationship',
     })
   }
 
   baseFields[1].fields.push({
     name: 'newTab',
-    label: translations['fields:openInNewTab'],
     type: 'checkbox',
+    label: translations['fields:openInNewTab'],
   })
 
   return baseFields as Field[]
