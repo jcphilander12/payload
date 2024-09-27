@@ -1,23 +1,20 @@
 'use client'
 
-import {
-  Button,
-  CheckboxField,
-  ConfirmPasswordField,
-  PasswordField,
-  useAuth,
-  useConfig,
-  useDocumentInfo,
-  useFormFields,
-  useFormModified,
-  useTranslation,
-} from '@payloadcms/ui'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import type { Props } from './types.js'
 
-import { RenderEmailAndUsernameFields } from '../../../../elements/EmailAndUsername/index.js'
+import { Button } from '../../../elements/Button/index.js'
+import { EmailAndUsernameFields } from '../../../elements/EmailAndUsername/index.js'
+import { CheckboxField } from '../../../fields/Checkbox/index.js'
+import { ConfirmPasswordField } from '../../../fields/ConfirmPassword/index.js'
+import { PasswordField } from '../../../fields/Password/index.js'
+import { useFormFields, useFormModified } from '../../../forms/Form/context.js'
+import { useAuth } from '../../../providers/Auth/index.js'
+import { useConfig } from '../../../providers/Config/index.js'
+import { useDocumentInfo } from '../../../providers/DocumentInfo/index.js'
+import { useTranslation } from '../../../providers/Translation/index.js'
 import { APIKey } from './APIKey.js'
 import './index.scss'
 
@@ -140,11 +137,12 @@ export const Auth: React.FC<Props> = (props) => {
     <div className={[baseClass, className].filter(Boolean).join(' ')}>
       {!disableLocalStrategy && (
         <React.Fragment>
-          <RenderEmailAndUsernameFields
+          <EmailAndUsernameFields
             loginWithUsername={loginWithUsername}
             operation={operation}
             permissions={docPermissions?.fields}
             readOnly={readOnly}
+            t={t}
           />
           {(showPasswordFields || requirePassword) && (
             <div className={`${baseClass}__changing-password`}>

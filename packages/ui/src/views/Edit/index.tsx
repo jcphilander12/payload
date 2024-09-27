@@ -1,35 +1,36 @@
 'use client'
 
-import type { ClientCollectionConfig, ClientGlobalConfig, ClientUser } from 'payload'
+import type {
+  ClientCollectionConfig,
+  ClientGlobalConfig,
+  ClientSideEditViewProps,
+  ClientUser,
+} from 'payload'
 
-import {
-  DocumentControls,
-  DocumentFields,
-  Form,
-  type FormProps,
-  OperationProvider,
-  RenderComponent,
-  Upload,
-  useAuth,
-  useConfig,
-  useDocumentEvents,
-  useDocumentInfo,
-  useEditDepth,
-  useUploadEdits,
-} from '@payloadcms/ui'
-import {
-  formatAdminURL,
-  getFormState,
-  handleBackToDashboard,
-  handleGoBack,
-  handleTakeOver,
-} from '@payloadcms/ui/shared'
 import { useRouter, useSearchParams } from 'next/navigation.js'
 import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 
-import { DocumentLocked } from '../../../elements/DocumentLocked/index.js'
-import { DocumentTakeOver } from '../../../elements/DocumentTakeOver/index.js'
-import { LeaveWithoutSaving } from '../../../elements/LeaveWithoutSaving/index.js'
+import type { FormProps } from '../../forms/Form/index.js'
+
+import { DocumentControls } from '../../elements/DocumentControls/index.js'
+import { DocumentFields } from '../../elements/DocumentFields/index.js'
+// import { LoadingOverlay } from '../../elements/Loading/index.js'
+// import { RenderComponent } from '../../elements/RenderComponent/index.js'
+// import { DocumentLocked } from '../../../elements/DocumentLocked/index.js'
+// import { Upload } from '../../elements/Upload/index.js'
+import { Form } from '../../forms/Form/index.js'
+import { useAuth } from '../../providers/Auth/index.js'
+import { useConfig } from '../../providers/Config/index.js'
+import { useDocumentEvents } from '../../providers/DocumentEvents/index.js'
+import { useDocumentInfo } from '../../providers/DocumentInfo/index.js'
+import { useEditDepth } from '../../providers/EditDepth/index.js'
+// import { DocumentTakeOver } from '../../../elements/DocumentTakeOver/index.js'
+import { OperationProvider } from '../../providers/Operation/index.js'
+import { useUploadEdits } from '../../providers/UploadEdits/index.js'
+import { formatAdminURL } from '../../utilities/formatAdminURL.js'
+import { getFormState } from '../../utilities/getFormState.js'
+import { handleTakeOver } from '../../utilities/handleTakeOver.js'
+// import { LeaveWithoutSaving } from '../../../elements/LeaveWithoutSaving/index.js'
 import { Auth } from './Auth/index.js'
 import './index.scss'
 import { SetDocumentStepNav } from './SetDocumentStepNav/index.js'
@@ -40,7 +41,14 @@ const baseClass = 'collection-edit'
 // This component receives props only on _pages_
 // When rendered within a drawer, props are empty
 // This is solely to support custom edit views which get server-rendered
-export const DefaultEditView: React.FC = () => {
+export const DefaultEditView: React.FC<ClientSideEditViewProps> = ({
+  MainFields,
+  PreviewButton,
+  PublishButton,
+  SaveButton,
+  SaveDraftButton,
+  SidebarFields,
+}) => {
   const {
     id,
     action,
@@ -77,7 +85,6 @@ export const DefaultEditView: React.FC = () => {
     updateDocumentEditor,
   } = useDocumentInfo()
 
-  const { refreshCookieAsync, user } = useAuth()
   const {
     config,
     config: {
@@ -88,17 +95,19 @@ export const DefaultEditView: React.FC = () => {
     getEntityConfig,
   } = useConfig()
 
-  const router = useRouter()
+  const collectionConfig = getEntityConfig({ collectionSlug }) as ClientCollectionConfig
+  const globalConfig = getEntityConfig({ globalSlug }) as ClientGlobalConfig
+
   const depth = useEditDepth()
+
+  const { refreshCookieAsync, user } = useAuth()
+
+  const router = useRouter()
   const params = useSearchParams()
   const { reportUpdate } = useDocumentEvents()
   const { resetUploadEdits } = useUploadEdits()
 
   const locale = params.get('locale')
-
-  const collectionConfig = getEntityConfig({ collectionSlug }) as ClientCollectionConfig
-
-  const globalConfig = getEntityConfig({ globalSlug }) as ClientGlobalConfig
 
   const entitySlug = collectionConfig?.slug || globalConfig?.slug
 
@@ -147,6 +156,7 @@ export const DefaultEditView: React.FC = () => {
   if (globalSlug) {
     classes.push(`global-edit--${globalSlug}`)
   }
+
   if (collectionSlug) {
     classes.push(`collection-edit--${collectionSlug}`)
   }
@@ -158,6 +168,7 @@ export const DefaultEditView: React.FC = () => {
 
     return entitySlug
   })
+
   const [validateBeforeSubmit, setValidateBeforeSubmit] = useState(() => {
     if (operation === 'create' && auth && !auth.disableLocalStrategy) {
       return true
@@ -363,7 +374,7 @@ export const DefaultEditView: React.FC = () => {
           onSuccess={onSave}
         >
           {BeforeDocument}
-          {isLockingEnabled && shouldShowDocumentLockedModal && !isReadOnlyForIncomingUser && (
+          {/* {isLockingEnabled && shouldShowDocumentLockedModal && !isReadOnlyForIncomingUser && (
             <DocumentLocked
               handleGoBack={() => handleGoBack({ adminRoute, collectionSlug, router })}
               isActive={shouldShowDocumentLockedModal}
@@ -387,8 +398,8 @@ export const DefaultEditView: React.FC = () => {
               updatedAt={lastUpdateTime}
               user={currentEditor}
             />
-          )}
-          {isLockingEnabled && showTakeOverModal && (
+          )} */}
+          {/* {isLockingEnabled && showTakeOverModal && (
             <DocumentTakeOver
               handleBackToDashboard={() => handleBackToDashboard({ adminRoute, router })}
               isActive={showTakeOverModal}
@@ -397,8 +408,8 @@ export const DefaultEditView: React.FC = () => {
                 setShowTakeOverModal(false)
               }}
             />
-          )}
-          {!isReadOnlyForIncomingUser && preventLeaveWithoutSaving && <LeaveWithoutSaving />}
+          )} */}
+          {/* {!isReadOnlyForIncomingUser && preventLeaveWithoutSaving && <LeaveWithoutSaving />} */}
           <SetDocumentStepNav
             collectionSlug={collectionConfig?.slug}
             globalSlug={globalConfig?.slug}
@@ -440,9 +451,13 @@ export const DefaultEditView: React.FC = () => {
               )
             }
             permissions={docPermissions}
+            PreviewButton={PreviewButton}
+            PublishButton={PublishButton}
             readOnlyForIncomingUser={isReadOnlyForIncomingUser}
             redirectAfterDelete={redirectAfterDelete}
             redirectAfterDuplicate={redirectAfterDuplicate}
+            SaveButton={SaveButton}
+            SaveDraftButton={SaveDraftButton}
             slug={collectionConfig?.slug || globalConfig?.slug}
             user={currentEditor}
           />
@@ -471,7 +486,8 @@ export const DefaultEditView: React.FC = () => {
                   )}
                   {upload && (
                     <React.Fragment>
-                      {collectionConfig?.admin?.components?.edit?.Upload ? (
+                      TODO: Upload
+                      {/* {collectionConfig?.admin?.components?.edit?.Upload ? (
                         <RenderComponent
                           mappedComponent={collectionConfig.admin.components.edit.Upload}
                         />
@@ -481,16 +497,14 @@ export const DefaultEditView: React.FC = () => {
                           initialState={initialState}
                           uploadConfig={upload}
                         />
-                      )}
+                      )} */}
                     </React.Fragment>
                   )}
                 </Fragment>
               )
             }
-            docPermissions={docPermissions}
-            fields={(collectionConfig || globalConfig)?.fields}
-            readOnly={isReadOnlyForIncomingUser || !hasSavePermission}
-            schemaPath={schemaPath}
+            MainFields={MainFields}
+            SidebarFields={SidebarFields}
           />
           {AfterDocument}
         </Form>

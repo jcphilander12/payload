@@ -11,7 +11,6 @@ import { Form, useForm } from '../../../forms/Form/index.js'
 import { type FormProps } from '../../../forms/Form/types.js'
 import { WatchChildErrors } from '../../../forms/WatchChildErrors/index.js'
 import { useConfig } from '../../../providers/Config/index.js'
-import { RenderComponent } from '../../../providers/Config/RenderComponent.js'
 import { useDocumentEvents } from '../../../providers/DocumentEvents/index.js'
 import { useDocumentInfo } from '../../../providers/DocumentInfo/index.js'
 import { useEditDepth } from '../../../providers/EditDepth/index.js'
@@ -20,6 +19,7 @@ import { useUploadEdits } from '../../../providers/UploadEdits/index.js'
 import { formatAdminURL } from '../../../utilities/formatAdminURL.js'
 import { getFormState } from '../../../utilities/getFormState.js'
 import { DocumentFields } from '../../DocumentFields/index.js'
+import { RenderComponent } from '../../RenderComponent/index.js'
 import { Upload } from '../../Upload/index.js'
 import { useFormsManager } from '../FormsManager/index.js'
 import { BulkUploadProvider } from '../index.js'
@@ -57,6 +57,8 @@ export function EditForm({ submitted }: EditFormProps) {
     getEntityConfig,
   } = useConfig()
 
+  const collectionConfig = getEntityConfig({ collectionSlug: docSlug }) as ClientCollectionConfig
+
   const router = useRouter()
   const depth = useEditDepth()
   const params = useSearchParams()
@@ -65,7 +67,6 @@ export function EditForm({ submitted }: EditFormProps) {
 
   const locale = params.get('locale')
 
-  const collectionConfig = getEntityConfig({ collectionSlug: docSlug }) as ClientCollectionConfig
   const collectionSlug = collectionConfig.slug
 
   const [schemaPath] = React.useState(collectionSlug)
@@ -151,7 +152,7 @@ export function EditForm({ submitted }: EditFormProps) {
             BeforeFields={
               BeforeFields || (
                 <React.Fragment>
-                  {collectionConfig?.admin?.components?.edit?.Upload ? (
+                  {/* {collectionConfig?.admin?.components?.edit?.Upload ? (
                     <RenderComponent
                       mappedComponent={collectionConfig.admin.components.edit.Upload}
                     />
@@ -161,7 +162,7 @@ export function EditForm({ submitted }: EditFormProps) {
                       initialState={initialState}
                       uploadConfig={collectionConfig.upload}
                     />
-                  )}
+                  )} */}
                 </React.Fragment>
               )
             }

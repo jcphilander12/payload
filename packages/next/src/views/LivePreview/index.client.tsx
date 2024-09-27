@@ -15,6 +15,8 @@ import {
   DocumentFields,
   Form,
   OperationProvider,
+  SetDocumentStepNav,
+  SetDocumentTitle,
   SetViewActions,
   useAuth,
   useConfig,
@@ -34,8 +36,6 @@ import React, { Fragment, useCallback, useEffect, useRef, useState } from 'react
 import { DocumentLocked } from '../../elements/DocumentLocked/index.js'
 import { DocumentTakeOver } from '../../elements/DocumentTakeOver/index.js'
 import { LeaveWithoutSaving } from '../../elements/LeaveWithoutSaving/index.js'
-import { SetDocumentStepNav } from '../Edit/Default/SetDocumentStepNav/index.js'
-import { SetDocumentTitle } from '../Edit/Default/SetDocumentTitle/index.js'
 import { useLivePreviewContext } from './Context/context.js'
 import { LivePreviewProvider } from './Context/index.js'
 import './index.scss'

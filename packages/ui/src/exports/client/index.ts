@@ -124,6 +124,7 @@ export { RowField } from '../../fields/Row/index.js'
 export { SelectField, SelectInput } from '../../fields/Select/index.js'
 export { TabsField } from '../../fields/Tabs/index.js'
 export { TextField, TextInput } from '../../fields/Text/index.js'
+export { JoinField } from '../../fields/Join/index.js'
 export type { TextInputProps } from '../../fields/Text/index.js'
 
 export { TextareaField, TextareaInput } from '../../fields/Textarea/index.js'
@@ -194,7 +195,6 @@ export { ActionsProvider, SetViewActions, useActions } from '../../providers/Act
 export { AuthProvider, useAuth } from '../../providers/Auth/index.js'
 export { ClientFunctionProvider, useClientFunctions } from '../../providers/ClientFunction/index.js'
 export { useAddClientFunction } from '../../providers/ClientFunction/index.js'
-export { RenderComponent } from '../../providers/Config/RenderComponent.js'
 
 export { ConfigProvider, useConfig } from '../../providers/Config/index.js'
 export { DocumentEventsProvider, useDocumentEvents } from '../../providers/DocumentEvents/index.js'
@@ -237,3 +237,11 @@ export { Select as SelectCondition } from '../../elements/WhereBuilder/Condition
 export { RelationshipField as RelationshipCondition } from '../../elements/WhereBuilder/Condition/Relationship/index.js'
 export { NumberField as NumberCondition } from '../../elements/WhereBuilder/Condition/Number/index.js'
 export { DateField as DateCondition } from '../../elements/WhereBuilder/Condition/Date/index.js'
+export { EmailAndUsernameFields } from '../../elements/EmailAndUsername/index.js'
+
+export { DefaultListView } from '../../views/List/index.js'
+export type { ListPreferences } from '../../views/List/types.js'
+
+export { DefaultEditView } from '../../views/Edit/index.js'
+export { SetDocumentStepNav } from '../../views/Edit/SetDocumentStepNav/index.js'
+export { SetDocumentTitle } from '../../views/Edit/SetDocumentTitle/index.js'

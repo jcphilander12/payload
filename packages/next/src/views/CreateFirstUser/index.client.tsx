@@ -8,19 +8,17 @@ import type {
 
 import {
   ConfirmPasswordField,
+  EmailAndUsernameFields,
   Form,
   type FormProps,
   FormSubmit,
   PasswordField,
-  RenderFields,
   useAuth,
   useConfig,
   useTranslation,
 } from '@payloadcms/ui'
 import { getFormState } from '@payloadcms/ui/shared'
 import React from 'react'
-
-import { RenderEmailAndUsernameFields } from '../../elements/EmailAndUsername/index.js'
 
 export const CreateFirstUserClient: React.FC<{
   initialState: FormState
@@ -71,11 +69,12 @@ export const CreateFirstUserClient: React.FC<{
       redirect={admin}
       validationOperation="create"
     >
-      <RenderEmailAndUsernameFields
+      <EmailAndUsernameFields
         className="emailAndUsername"
         loginWithUsername={loginWithUsername}
         operation="create"
         readOnly={false}
+        t={t}
       />
       <PasswordField
         autoComplete={'off'}
@@ -86,14 +85,14 @@ export const CreateFirstUserClient: React.FC<{
         }}
       />
       <ConfirmPasswordField />
-      <RenderFields
+      {/* <RenderFields
         fields={collectionConfig.fields}
         forceRender
         operation="create"
         path=""
         readOnly={false}
         schemaPath={userSlug}
-      />
+      /> */}
       <FormSubmit size="large">{t('general:create')}</FormSubmit>
     </Form>
   )

@@ -1,5 +1,7 @@
 'use client'
 import type {
+  ClientCollectionConfig,
+  ClientGlobalConfig,
   ClientUser,
   Data,
   DocumentPermissions,
@@ -28,6 +30,7 @@ import { useAuth } from '../Auth/index.js'
 import { useConfig } from '../Config/index.js'
 import { useLocale } from '../Locale/index.js'
 import { usePreferences } from '../Preferences/index.js'
+import { useServerActions } from '../ServerActions/index.js'
 import { useTranslation } from '../Translation/index.js'
 import { UploadEditsProvider, useUploadEdits } from '../UploadEdits/index.js'
 
@@ -58,15 +61,16 @@ const DocumentInfo: React.FC<
   const {
     config: {
       admin: { dateFormat },
-      collections,
-      globals,
       routes: { api },
       serverURL,
     },
+    getEntityConfig,
   } = useConfig()
 
-  const collectionConfig = collections.find((c) => c.slug === collectionSlug)
-  const globalConfig = globals.find((g) => g.slug === globalSlug)
+  const collectionConfig = getEntityConfig({ collectionSlug }) as ClientCollectionConfig
+
+  const globalConfig = getEntityConfig({ globalSlug }) as ClientGlobalConfig
+
   const docConfig = collectionConfig || globalConfig
 
   const lockDocumentsProp = docConfig?.lockDocuments !== undefined ? docConfig?.lockDocuments : true
@@ -117,6 +121,8 @@ const DocumentInfo: React.FC<
   const prevLocale = useRef(locale)
   const hasInitializedDocPermissions = useRef(false)
 
+  const payloadServerAction = useServerActions()
+
   const versionsConfig = docConfig?.versions
 
   const baseURL = `${serverURL}${api}`
@@ -142,6 +148,29 @@ const DocumentInfo: React.FC<
   const isEditing = getIsEditing({ id, collectionSlug, globalSlug })
   const operation = isEditing ? 'update' : 'create'
   const shouldFetchVersions = Boolean(versionsConfig && docPermissions?.readVersions?.permission)
+
+  useEffect(() => {
+    if (!collectionConfig && !globalConfig && initialState) {
+      const getNewConfig = async () => {
+        // @ts-expect-error eslint-disable-next-line
+        const res = (await payloadServerAction('render-config', {
+          collectionSlug,
+          formState: initialState,
+          globalSlug,
+          languageCode: i18n.language,
+        })) as any as ClientCollectionConfig | ClientGlobalConfig
+      }
+      void getNewConfig()
+    }
+  }, [
+    payloadServerAction,
+    collectionSlug,
+    initialState,
+    i18n.language,
+    globalSlug,
+    collectionConfig,
+    globalConfig,
+  ])
 
   const unlockDocument = useCallback(
     async (docId: number | string, slug: string) => {
@@ -526,11 +555,7 @@ const DocumentInfo: React.FC<
     const abortController = new AbortController()
     const localeChanged = locale !== prevLocale.current
 
-    if (
-      initialStateFromProps === undefined ||
-      initialDataFromProps === undefined ||
-      localeChanged
-    ) {
+    if ((collectionSlug || globalSlug) && (!initialStateFromProps || localeChanged)) {
       if (localeChanged) {
         prevLocale.current = locale
       }
@@ -554,6 +579,7 @@ const DocumentInfo: React.FC<
             serverURL,
             signal: abortController.signal,
           })
+
           const data = reduceFieldsToValues(result, true)
           setData(data)
 
@@ -613,7 +639,7 @@ const DocumentInfo: React.FC<
         i18n,
       }),
     )
-  }, [collectionConfig, data, dateFormat, i18n, id, globalConfig])
+  }, [collectionConfig, globalConfig, data, dateFormat, i18n, id])
 
   useEffect(() => {
     if (data && (collectionSlug || globalSlug)) {

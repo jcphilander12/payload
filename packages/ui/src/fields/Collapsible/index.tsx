@@ -7,7 +7,6 @@ import { Collapsible as CollapsibleElement } from '../../elements/Collapsible/in
 import { ErrorPill } from '../../elements/ErrorPill/index.js'
 import { useFieldProps } from '../../forms/FieldPropsProvider/index.js'
 import { RenderFields } from '../../forms/RenderFields/index.js'
-import { RowLabel } from '../../forms/RowLabel/index.js'
 import { WatchChildErrors } from '../../forms/WatchChildErrors/index.js'
 import { withCondition } from '../../forms/withCondition/index.js'
 import { useDocumentInfo } from '../../providers/DocumentInfo/index.js'
@@ -19,17 +18,15 @@ import './index.scss'
 const baseClass = 'collapsible-field'
 
 import { useFormInitializing, useFormProcessing } from '../../forms/Form/context.js'
-import { FieldDescription } from '../FieldDescription/index.js'
 
 const CollapsibleFieldComponent: CollapsibleFieldClientComponent = (props) => {
   const {
-    descriptionProps,
+    Description,
     field,
     field: {
       _path: pathFromProps,
-      admin: { className, description, initCollapsed = false, readOnly: readOnlyFromAdmin } = {},
+      admin: { className, initCollapsed = false, readOnly: readOnlyFromAdmin } = {},
       fields,
-      label,
     },
     readOnly: readOnlyFromTopLevelProps,
   } = props
@@ -141,7 +138,7 @@ const CollapsibleFieldComponent: CollapsibleFieldClientComponent = (props) => {
           collapsibleStyle={fieldHasErrors ? 'error' : 'default'}
           header={
             <div className={`${baseClass}__row-label-wrap`}>
-              <RowLabel
+              {/* <RowLabel
                 i18n={i18n}
                 path={path}
                 RowLabel={
@@ -150,7 +147,7 @@ const CollapsibleFieldComponent: CollapsibleFieldClientComponent = (props) => {
                     : undefined
                 }
                 rowLabel={label}
-              />
+              /> */}
               {fieldHasErrors && <ErrorPill count={errorCount} i18n={i18n} withMessage />}
             </div>
           }
@@ -168,12 +165,7 @@ const CollapsibleFieldComponent: CollapsibleFieldClientComponent = (props) => {
             schemaPath={schemaPath}
           />
         </CollapsibleElement>
-        <FieldDescription
-          Description={field?.admin?.components?.Description}
-          description={description}
-          field={field}
-          {...(descriptionProps || {})}
-        />
+        {Description}
       </div>
     </Fragment>
   )

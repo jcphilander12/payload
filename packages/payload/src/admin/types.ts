@@ -1,7 +1,10 @@
+import type { AcceptedLanguages, I18nClient } from '@payloadcms/translations'
 import type React from 'react'
 
-import type { PayloadComponent } from '../config/types.js'
+import type { ImportMap } from '../bin/generateImportMap/index.js'
+import type { PayloadComponent, SanitizedConfig } from '../config/types.js'
 import type { JsonObject } from '../types/index.js'
+import type { Data, FormState } from './types.js'
 
 export type { CellComponentProps, DefaultCellComponentProps } from './elements/Cell.js'
 export type { ConditionalDateProps } from './elements/DatePicker.js'
@@ -346,6 +349,7 @@ export type {
   AdminViewComponent,
   AdminViewConfig,
   AdminViewProps,
+  ClientSideEditViewProps,
   EditViewProps,
   InitPageResult,
   ServerSideEditViewProps,
@@ -370,30 +374,57 @@ export type MappedEmptyComponent = {
   type: 'empty'
 }
 
-export type MappedComponent<TComponentClientProps extends JsonObject = JsonObject> =
-  | MappedClientComponent<TComponentClientProps>
-  | MappedEmptyComponent
-  | MappedServerComponent<TComponentClientProps>
-  | undefined
+export enum Action {
+  RenderConfig = 'render-config',
+}
 
-export type CreateMappedComponent = {
-  <T extends JsonObject>(
-    component: { Component: React.FC<T> } | null | PayloadComponent<T>,
-    props: {
-      clientProps?: JsonObject
-      serverProps?: object
-    },
-    fallback: React.FC,
-    identifier: string,
-  ): MappedComponent<T>
+export type RenderEntityConfigArgs = {
+  collectionSlug?: string
+  data?: Data
+  globalSlug?: string
+}
 
-  <T extends JsonObject>(
-    components: ({ Component: React.FC<T> } | PayloadComponent<T>)[],
-    props: {
-      clientProps?: JsonObject
-      serverProps?: object
-    },
-    fallback: React.FC,
-    identifier: string,
-  ): MappedComponent<T>[]
+export type RenderRootConfigArgs = {}
+
+export type RenderFieldConfigArgs = {
+  collectionSlug?: string
+  formState?: FormState
+  globalSlug?: string
+  schemaPath: string
+}
+
+export type RenderConfigArgs = {
+  action: Action.RenderConfig
+  config: Promise<SanitizedConfig> | SanitizedConfig
+  i18n: I18nClient
+  importMap: ImportMap
+  languageCode: AcceptedLanguages
+  serverProps?: any
+} & (RenderEntityConfigArgs | RenderFieldConfigArgs | RenderRootConfigArgs)
+
+export type PayloadServerAction = (
+  args:
+    | {
+        [key: string]: any
+        action: Action
+        i18n: I18nClient
+      }
+    | RenderConfigArgs,
+) => Promise<string>
+
+export type FieldSlots = {
+  AfterInput?: React.ReactNode
+  BeforeInput?: React.ReactNode
+  Description?: React.ReactNode
+  Error?: React.ReactNode
+  Label?: React.ReactNode
+}
+
+export type EntitySlots = {
+  MainFields: React.ReactNode
+  PreviewButton?: React.ReactNode
+  PublishButton?: React.ReactNode
+  SaveButton?: React.ReactNode
+  SaveDraftButton?: React.ReactNode
+  SidebarFields: React.ReactNode
 }
