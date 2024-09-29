@@ -43,7 +43,7 @@
     "prepublishOnly": "pnpm clean && pnpm turbo build"
   },
   "dependencies": {
-    "graphql-scalars": "1.22.2",
+    "graphql-scalars": "1.23.0",
     "pluralize": "8.0.0",
     "ts-essentials": "10.0.2",
     "tsx": "4.19.1"
