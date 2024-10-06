@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@payloadcms/plugin-cloud-storage": "workspace:*",
-    "@vercel/blob": "^0.22.3"
+    "@vercel/blob": "^0.24.1"
   },
   "devDependencies": {
     "payload": "workspace:*"
